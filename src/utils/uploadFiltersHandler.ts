@@ -6,11 +6,11 @@ import  AWS  from 'aws-sdk/clients/s3';
 
 
      
-const region:string = process.env.AWS_BUCKET_REGION as string;
+const region:string = process.env._AWS_BUCKET_REGION as string;
 
-const accessKeyId:string = process.env.AWS_ACCESS_KEY as string;
-const secretAccessKey:string = process.env.AWS_SECRET_ACCESS_KEYY as string;
-const bucketName = process.env.AWS_BUCKET_NAME as string;
+const accessKeyId:string = process.env._AWS_ACCESS_KEY as string;
+const secretAccessKey:string = process.env._AWS_SECRET_ACCESS_KEYY as string;
+const bucketName = process.env._AWS_BUCKET_NAME as string;
 const  s3 = new AWS({ region,accessKeyId, secretAccessKey});
 
  export  const uploadS3 = async(file:any): Promise<object | any> => {
@@ -43,7 +43,6 @@ export  const uploadMultipleS3 = async(files:Array<any>): Promise<Array<object> 
 
  
       filefilesbject[i] = await s3.upload(uploadParams).promise();
-     
 
      count ++;
      if(count == len){

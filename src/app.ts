@@ -59,6 +59,7 @@ class App {
             `mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}${MONGO_PATH}`
             // `mongodb//${MONGO_USER}:${MONGO_PASSWORD}${MONGO_PATH}` ##for docker config
         );
+        mongoose.set('strictQuery', false);
 
     }
     private initSession() {

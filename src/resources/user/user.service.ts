@@ -10,9 +10,9 @@ class UserService {
     private userVerification = userVerificationModel;
 
 
-    public async create(firstName:string, lastName: string, email:string, password:string): Promise<User> {
+    public async create(firstName:string, lastName: string, email:string, password:string,accountType:string): Promise<User> {
         try {
-            const creatUser =  await this.user.create({firstName,lastName,email, password});
+            const creatUser =  await this.user.create({firstName,lastName,email, password,accountType});
             let userSettings = {
                 "userId":creatUser._id,
                 "notificationSettings": [

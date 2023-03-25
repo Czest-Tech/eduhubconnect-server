@@ -61,13 +61,12 @@ class UserController implements Controller {
 
     private create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
+            const { firstName,lastName,email,password,accountType} = req.body;
             console.log(req.body)
-            const { firstName,lastName,email,password} = req.body;
-
             const hashedPassword = await  this.initHashClass.hashPassword(password) ;
             if(hashedPassword){
-                 const user =  await this.userService.create(firstName,lastName,email,hashedPassword)
-                 
+                 const user =  await this.userService.create(firstName,lastName,email,hashedPassword,accountType) as any
+                 (user && (delete  user["password"]))
                  res.status(201).json({user})
             } else {
                 res.status(501).json(new HttpException(400, 'can not create user'))

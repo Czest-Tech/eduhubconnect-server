@@ -6,23 +6,23 @@ interface UpdateUser extends Document{
     email:string;
 }
 interface User extends UpdateUser,Document {
-    password: string;
-    about?:string;
-    profilePhoto?:Array<any>;
-    profileCoverPhoto:Array<any>;
-    profilePhotoSource:string;
-
-    dateOfBirth?:string;
-    location?:string;
-    country?:string;
-    city?:string;
-    profession?:string;
-    title?:string   
+  password: string;
+  about?:string;
+  profilePhoto?:Array<any>;
+  profileCoverPhoto:Array<any>;
+  profilePhotoSource:string;
+  dateOfBirth?:string;
+  location?:string;
+  country?:string;
+  city?:string;
+  profession?:string;
+  title?:string;
+  accountType:number;
 }
 
 interface UserDocument extends UpdateUser,User, Document {
-    createdAt: Date;
-    updatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 interface UserSettings extends UserDocument, Document {
   userId:User["_id"];
@@ -31,14 +31,39 @@ interface UserSettings extends UserDocument, Document {
 
 }
 interface UserVerification extends  Document {
-    userId:User["_id"];
-    token:string;
-    email:string;
-    isExpired:boolean;
+  userId:User["_id"];
+  token:string;
+  email:string;
+  isExpired:boolean;
   
-  }
-  
-
-
-
-export {   User, UserDocument, UpdateUser,UserSettings,UserVerification}
+}
+interface StudentAccount extends UserDocument {
+  userId : User["_id"];
+  skills: Array<any>;
+  files: Array<any>;
+  resume: Array<any>;
+  education: Array<any>;
+}
+interface Agent extends UserDocument {
+  userId : User["_id"];
+  about: string;
+  phone:string;
+  email:string;
+  verified: boolean;
+}
+interface Company extends UserDocument { 
+  createdBy: User["_id"];
+  name:string;
+  city:string;
+  country:string;
+  description:string;
+  images:Array<string>;
+  contact:string;
+}
+interface CompanyUsers extends UserDocument {
+  companyId: Company["_id"];
+  userId: User["_id"];
+  userType:number;
+}
+ 
+export { User, UserDocument, Agent, CompanyUsers, Company,UpdateUser, UserSettings, StudentAccount, UserVerification }
