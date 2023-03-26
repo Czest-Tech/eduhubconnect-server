@@ -77,9 +77,10 @@ class SiteContentController implements Controller {
     }
     private getPrograms = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const {skip, limit} = req.query;
-            const programs = await this.mainSite.getPrograms(limit, skip)
-            res.status(201).json({ programs })
+            const {skip, limit, search} = req.query;
+            const programs = await this.mainSite.getPrograms(limit, skip, search as string);
+            const totalPrograms = await this.mainSite.getTotalCount('program');
+            res.status(201).json({ programs,totalPrograms })
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }

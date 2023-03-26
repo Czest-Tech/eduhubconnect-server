@@ -92,9 +92,20 @@ export default class SiteContentService {
 
         }
     }
-    public async getPrograms(limit:any = 20,skip:any = 0): Promise<any> {
+    public async getPrograms(limit:any = 20,skip:any = 0, search:string = ''): Promise<any> {
         try {
-            return skip?  await this.programs.find().skip(skip).limit(limit) : this.programs.find().limit(limit);
+            
+            return await this.programs.aggregate( [{
+                $search: {
+                  index: "default",
+                  text: {
+                    query: search,
+                    path: {
+                      wildcard: "*"
+                    }
+                  }
+                }
+              }]).skip( Number(skip)).limit(Number(limit));
         } catch (error: any) {
             throw new Error(error.message);
 
@@ -130,7 +141,12 @@ export default class SiteContentService {
             throw new Error(error.message);
         }
     }
-
+    public async getTotalCount(type:string) {
+        if(type === 'program'){
+          return await  this.programs.countDocuments();
+        }
+        return 0;
+    }
     public async getSingleProgram(query: FilterQuery<Program>): Promise<any> {
         try {
             const products: any = await this.programs.aggregate([
