@@ -1,5 +1,5 @@
 import { Schema , model } from "mongoose";
-import {University,Program, Scholarships, Blogs } from "./site-content.interface";
+import {University,Program, Scholarships, Blogs, BlogCategory } from "./site-content.interface";
 
 const scholarshipsSchema = new Schema (
     {
@@ -84,15 +84,27 @@ const blogsSchema = new Schema({
     content: {type: String, required: false},
     description: {type: String, required: false},
     posted:{type: String, required: false},
-    category: {type: Number, required: false},
+    category: {type: String, required: false},
     thumbnail: {type: String, required: false},
     view:{type: Number, required: false},
     shared: {type: Number, required: false},
     tags: {type: String, required: false},
     created_at: {type: Number, required: false},
     created_by: {type: Number, required: false},
+    postedBy: {
+        type:Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    nameSlug:{type:String, required: false}
+});
+const blogCategorySchema = new Schema({
+    name: {type: String, required: true},
+    images: {type: Array, required: false}
+
 });
 export const ScholarshipsSchema = model<Scholarships>('Scholarships', scholarshipsSchema);
 export const ProgramsSchema = model<Program>('Programs', programsSchema);
 export const UnivesitySchema = model<University>('Universities', universitySchema);
 export const BlogsSchema = model<Blogs>('Blogs', blogsSchema);
+export const BlogsCategoriesSchema = model<BlogCategory>('blogCategories', blogCategorySchema);

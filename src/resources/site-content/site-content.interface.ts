@@ -86,7 +86,13 @@ export interface Blogs extends Document {
     thumbnail: string;
     view:number;
     shared: number;
+    nameSlug:string;
     tags: string;
     created_at: number;
     created_by: number;
+    postedBy:User["_id"];
+}
+export interface BlogCategory extends Document { 
+    name: string;
+    images: Array<any>;
 }

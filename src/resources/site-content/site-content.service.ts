@@ -1,13 +1,13 @@
-import {ScholarshipsSchema,ProgramsSchema,UnivesitySchema,BlogsSchema} from "./site-content.model";
+import {ScholarshipsSchema,ProgramsSchema,UnivesitySchema,BlogsSchema, BlogsCategoriesSchema} from "./site-content.model";
 import mongoose, {FilterQuery,UpdateQuery} from "mongoose";
-import { Blogs, Program, Scholarships, University } from "./site-content.interface";
+import { BlogCategory, Blogs, Program, Scholarships, University } from "./site-content.interface";
 
 export default class SiteContentService {
     private university = UnivesitySchema;
     private programs = ProgramsSchema;
     private scholarship = ScholarshipsSchema;
     private blogs =  BlogsSchema;
-    
+    private blogCategory = BlogsCategoriesSchema;
 
     public async searchPrograms(data: string): Promise<any> {
         try {
@@ -76,9 +76,9 @@ export default class SiteContentService {
         }
     }
 
-    public async getBlogs(query?: FilterQuery<Blogs>): Promise<any> {
+    public async getBlogs(limit:any = 20,skip:any = 0): Promise<any> {
         try {
-            return query?  await this.blogs.find(query) : this.blogs.find();
+            return  await this.blogs.find().skip(skip).limit(limit);
         } catch (error: any) {
             throw new Error(error.message);
 
@@ -92,17 +92,17 @@ export default class SiteContentService {
 
         }
     }
-    public async getPrograms(query?: FilterQuery<Program>): Promise<any> {
+    public async getPrograms(limit:any = 20,skip:any = 0): Promise<any> {
         try {
-            return query?  await this.programs.find(query) : this.programs.find();
+            return skip?  await this.programs.find().skip(skip).limit(limit) : this.programs.find().limit(limit);
         } catch (error: any) {
             throw new Error(error.message);
 
         }
     }
-    public async getScholarships(query?: FilterQuery<Scholarships>): Promise<any> {
+    public async getScholarships(limit:any = 20,skip: any = 0): Promise<any> {
         try {
-            return query?  await this.scholarship.find(query) : this.scholarship.find();
+            return  await this.scholarship.find().skip(skip).limit(limit);
         } catch (error: any) {
             throw new Error(error.message);
 
@@ -149,6 +149,58 @@ export default class SiteContentService {
             ])
             
             return products;
+        } catch (error: any) {
+            throw new Error(error.message);
+        }
+    }
+
+    public async createBlogCategory (body:any): Promise<any> {
+        try {   
+           return await this.blogCategory.create( {...body});
+        } catch (error:any) {
+           throw new Error(error.message)
+        }
+    }
+    public async createBlog (body:any): Promise<any> {
+        try {   
+           return await this.blogs.create( {...body});
+        } catch (error:any) {
+           throw new Error(error.message)
+        }
+    }
+    public async updateBlogCategory(body: UpdateQuery<any>, blogCategoryId: any): Promise<any> {
+        try {
+            return  await this.blogCategory.findOneAndUpdate({ _id:new mongoose.Types.ObjectId(blogCategoryId)}, { ...body }, { returnDocument: "after" });
+        } catch (error: any) {
+            throw new Error(error.message);
+        }
+    }    
+    public async deleteBlogCategory(blogCategoryId: any): Promise<any> {
+        try {
+            return await this.blogCategory.deleteOne({ _id: new mongoose.Types.ObjectId(blogCategoryId) });
+        } catch (error:any) {
+            throw new Error(error.message);
+
+        }
+    }
+    public async create (body:any): Promise<any> {
+        try {   
+           return await this.blogs.create( {...body});
+        } catch (error:any) {
+           throw new Error(error.message)
+        }
+    }
+    public async deleteBlog(blogId: any): Promise<any> {
+        try {
+            return await this.blogs.deleteOne({ _id: new mongoose.Types.ObjectId(blogId) });
+        } catch (error:any) {
+            throw new Error(error.message);
+
+        }
+    }
+    public async updateBlog(body: UpdateQuery<any>, blogId: any): Promise<any> {
+        try {
+            return  await this.blogs.findOneAndUpdate({ _id:new mongoose.Types.ObjectId(blogId) }, { ...body }, { returnDocument: "after" });
         } catch (error: any) {
             throw new Error(error.message);
         }

@@ -17,10 +17,15 @@ class SiteContentController implements Controller {
     public path: string = '/main-site';
     private upload = multer({ dest: "./" });
     private blogsEndPoint = '/blogs';
+    private blogCreateEndPoint = '/blog';
+    private blogUpdateEndPoint = '/blog/:id';
+    private blogsCategoryEndPoint = '/blog-categories';
+    private blogsCategoryDeleteOrUpdateEndPoint = '/blog-categories/:id';
     private programsEndPoint = '/programs';
     private universitiesEndPoint = '/universities';
     private universityEndPoint = '/university/:id';
     private scholarshipsEndPoint = '/scholarships';
+
 
     
     private mainSite = new SiteContentService();
@@ -30,6 +35,14 @@ class SiteContentController implements Controller {
 
     private initialiseRoutes(): void {    
         this.router.get(`${this.path + this.blogsEndPoint}`, this.getBlogs);
+        this.router.delete(`${this.path + this.blogUpdateEndPoint}`, this.deleteBlogs);
+        this.router.patch(`${this.path + this.blogUpdateEndPoint}`, this.updateBlogs);
+        this.router.post(`${this.path + this.blogCreateEndPoint}`, this.createBlogs);
+        this.router.post(`${this.path + this.blogsCategoryEndPoint}`, this.createBlogCategory);
+        this.router.patch(`${this.path + this.blogsCategoryDeleteOrUpdateEndPoint}`, this.updateBlogCategory);
+        this.router.delete(`${this.path + this.blogsCategoryDeleteOrUpdateEndPoint}`, this.deleteBlogCategory);
+
+
         this.router.get(`${this.path + this.programsEndPoint}`, this.getPrograms);
         this.router.get(`${this.path + this.universitiesEndPoint}`, this.getUniversities);
         this.router.get(`${this.path + this.universityEndPoint}`, this.getUniversity);
@@ -46,7 +59,8 @@ class SiteContentController implements Controller {
     }
     private getScholarships = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const scholarships = await this.mainSite.getScholarships()
+            const {limit, skip} = req.query;
+            const scholarships = await this.mainSite.getScholarships(limit, skip)
             res.status(201).json({ scholarships })
         } catch (error: any) {
             next(new HttpException(400, error.message))
@@ -54,7 +68,8 @@ class SiteContentController implements Controller {
     }
     private getBlogs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const blogs = await this.mainSite.getBlogs()
+            const {limit, skip} = req.query;
+            const blogs = await this.mainSite.getBlogs(limit, skip)
             res.status(201).json({ blogs })
         } catch (error: any) {
             next(new HttpException(400, error.message))
@@ -62,7 +77,8 @@ class SiteContentController implements Controller {
     }
     private getPrograms = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const programs = await this.mainSite.getPrograms()
+            const {skip, limit} = req.query;
+            const programs = await this.mainSite.getPrograms(limit, skip)
             res.status(201).json({ programs })
         } catch (error: any) {
             next(new HttpException(400, error.message))
@@ -76,6 +92,68 @@ class SiteContentController implements Controller {
             res.status(201).json({ university })
         } catch (error: any) {
             next(new HttpException(400, error.message))
+        }
+    }
+    private deleteBlogs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const { id } = req.params;
+            const blog = await this.mainSite.deleteBlog(id)
+            res.status(201).json({ delete: true, blogs: blog })
+        } catch (error: any) {
+            next(new HttpException(400, error.message))
+        }
+    }
+    private updateBlogs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const {id} = req.params;
+            const blog =  await this.mainSite.updateBlog(req.body,id)
+            res.status(201).json(blog)     
+        } catch (error:any) {
+            next(new HttpException(400,error.message))
+        }
+    }
+    private deleteBlogCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const { id } = req.params;
+            const blogCategory = await this.mainSite.deleteBlogCategory(id)
+            res.status(201).json({ delete: true, category: blogCategory })
+        } catch (error: any) {
+            next(new HttpException(400, error.message))
+        }
+    }
+    private createBlogs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const { name} = req.body;
+            const file = req.files as any; 
+            req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
+            
+            const blogs = await this.mainSite.createBlog(req.body)
+
+            res.status(201).json(blogs)
+        } catch (error: any) {
+            next(new HttpException(201, error.message))
+        }
+    }
+    private createBlogCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const {name} = req.body; 
+
+            req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
+            const category = await this.mainSite.createBlogCategory(req.body)
+
+            res.status(201).json(category)
+        } catch (error: any) {
+            next(new HttpException(201, error.message))
+        }
+   
+    }
+    private updateBlogCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const {id} = req.params;
+            const category =  await this.mainSite.updateBlogCategory(req.body,id)
+            res.status(201).json({category})     
+        } catch (error:any) {
+            next(new HttpException(400,error.message))
         }
     }
    
