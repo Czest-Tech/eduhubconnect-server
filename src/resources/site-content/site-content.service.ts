@@ -11,21 +11,20 @@ export default class SiteContentService {
 
     public async searchPrograms(data: string): Promise<any> {
         try {
-            const search = await this.programs.aggregate(
+            const program = await this.programs.aggregate(
                 [{
                     $search: {
                         index: "default",
-                        autocomplete: {
-                            query: data,
-                            path: "name",
-                            fuzzy: {
-                                maxEdits: 2
-                            }
+                        text: {
+                          query:  data,
+                          path: {
+                            wildcard: "*"
+                          }
                         }
-                    }
+                      }
                 }]
             );
-            return search;
+            return program;
         } catch (error: any) {
             throw new Error(error.message);
 
@@ -92,20 +91,15 @@ export default class SiteContentService {
 
         }
     }
-    public async getPrograms(limit:any = 20,skip:any = 0, search:string = ''): Promise<any> {
+    public async getPrograms(limit:any = 20,skip:any = 0, search:string = '',program: string = '', university:string = ''): Promise<any> {
         try {
+        
+            return await this.programs.find( 
+             
+                { programs :  {$regex : `^${program}.*` , $options: 'si' },university : { $regex : `^${university}.*` , $options: 'si' }}
+               
             
-            return await this.programs.aggregate( [{
-                $search: {
-                  index: "default",
-                  text: {
-                    query: search,
-                    path: {
-                      wildcard: "*"
-                    }
-                  }
-                }
-              }]).skip( Number(skip)).limit(Number(limit));
+            ).skip( Number(skip) || 0).limit(Number(limit) || 0);
         } catch (error: any) {
             throw new Error(error.message);
 
