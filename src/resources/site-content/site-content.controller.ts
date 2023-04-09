@@ -146,9 +146,13 @@ class SiteContentController implements Controller {
         try {
             const file = req.file as any;
             const {name} = req.body; 
-            const result = await uploadS3(file)
-            await this.unlinkFile(file.path)
-            req.body["images"] = result;
+            
+            if(file){
+                const result = await uploadS3(file)
+                await this.unlinkFile(file.path)
+                req.body["images"] = result;
+            }
+           
             req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
             const category = await this.mainSite.createBlogCategory(req.body)
 
