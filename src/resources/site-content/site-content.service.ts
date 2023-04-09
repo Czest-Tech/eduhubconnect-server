@@ -105,7 +105,7 @@ export default class SiteContentService {
                         }    
                     }
                 }          
-            ]).skip(skip).limit(limit);
+            ]).skip(skip).limit(limit).sort({"createdAt":-1});
         } catch (error: any) {
             throw new Error(error.message);
 
