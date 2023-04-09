@@ -230,6 +230,13 @@ export default class SiteContentService {
            throw new Error(error.message)
         }
     }
+    public async getBlogCategory (): Promise<any> {
+        try {   
+           return await this.blogCategory.find();
+        } catch (error:any) {
+           throw new Error(error.message)
+        }
+    }
     public async createBlog (body:any): Promise<any> {
         try {   
            return await this.blogs.create( {...body});

@@ -40,6 +40,8 @@ class SiteContentController implements Controller {
         this.router.post(`${this.path + this.blogsEndPoint}`,[ this.upload.single('picture')], this.createBlogs);
         this.router.post(`${this.path + this.blogsCategoryEndPoint}`,[ this.upload.single('image')], this.createBlogCategory);
         this.router.get(`${this.path + this.blogsEndPoint}`, this.getBlogs);
+        this.router.get(`${this.path + this.blogsCategoryEndPoint}`,this.getBlogCategory);
+
         this.router.get(`${this.path + this.programsEndPoint}`, this.getPrograms);
         this.router.get(`${this.path + this.universitiesEndPoint}`, this.getUniversities);
         this.router.get(`${this.path + this.universityEndPoint}`, this.getUniversity);
@@ -153,6 +155,14 @@ class SiteContentController implements Controller {
             next(new HttpException(201, error.message))
         }
    
+    }
+    private getBlogCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const categories = await this.mainSite.getBlogCategory();
+            res.status(201).json({ categories })
+        } catch (error: any) {
+            next(new HttpException(400, error.message))
+        }
     }
     private updateBlogCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {

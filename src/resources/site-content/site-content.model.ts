@@ -58,7 +58,7 @@ const programsSchema = new Schema ({
     updated_at:  {type: String, required: false},
     university_id:  {type: String, required: false},
     programs:  {type: String, required: false}
-})
+},    {timestamps:true})
 const universitySchema = new Schema({
     main_image:  {type: String, required: false},
     university_logo:  {type: String, required: false},
@@ -78,7 +78,7 @@ const universitySchema = new Schema({
     email:  {type: String, required: false},
     website:  {type: String, required: false},
     programs:  {type: String, required: false}
-});
+},    {timestamps:true});
 const blogsSchema = new Schema({
     title: {type: String, required: false},
     content: {type: String, required: false},
@@ -111,12 +111,11 @@ const blogsSchema = new Schema({
         required: true
     },
     nameSlug:{type:String, required: false}
-});
+},   {timestamps:true});
 const blogCategorySchema = new Schema({
     name: {type: String, required: true},
     images: {type: Array, required: false}
-
-});
+},    {timestamps:true});
 export const ScholarshipsSchema = model<Scholarships>('Scholarships', scholarshipsSchema);
 export const ProgramsSchema = model<Program>('Programs', programsSchema);
 export const UnivesitySchema = model<University>('Universities', universitySchema);
