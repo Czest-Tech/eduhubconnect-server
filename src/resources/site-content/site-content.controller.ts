@@ -40,8 +40,8 @@ class SiteContentController implements Controller {
         this.router.post(`${this.path + this.blogsEndPoint}`,[ this.upload.single('picture')], this.createBlogs);
         this.router.post(`${this.path + this.blogsCategoryEndPoint}`,[ this.upload.single('image')], this.createBlogCategory);
         this.router.get(`${this.path + this.blogsEndPoint}`, this.getBlogs);
+        this.router.get(`${this.path + this.blogUpdateEndPoint}`, this.getBlogs);
         this.router.get(`${this.path + this.blogsCategoryEndPoint}`,this.getBlogCategory);
-
         this.router.get(`${this.path + this.programsEndPoint}`, this.getPrograms);
         this.router.get(`${this.path + this.universitiesEndPoint}`, this.getUniversities);
         this.router.get(`${this.path + this.universityEndPoint}`, this.getUniversity);
@@ -67,8 +67,17 @@ class SiteContentController implements Controller {
     }
     private getBlogs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const {limit, skip} = req.query;
-            const blogs = await this.mainSite.getBlogs(limit, skip)
+            const {limit, skip } = req.query;
+            const {id} = req.params;
+            let blogs : any = [];
+            console.log(id);
+            if(id){
+              
+                 blogs = await this.mainSite.getSingleBlog({_id:new mongoose.Types.ObjectId(id as any) })
+            } else {
+                 blogs = await this.mainSite.getBlogs(limit, skip)
+            }
+         
             res.status(201).json({ blogs })
         } catch (error: any) {
             next(new HttpException(400, error.message))
@@ -146,7 +155,7 @@ class SiteContentController implements Controller {
         try {
             const file = req.file as any;
             const {name} = req.body; 
-            
+
             if(file){
                 const result = await uploadS3(file)
                 await this.unlinkFile(file.path)
