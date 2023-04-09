@@ -14,15 +14,21 @@ const bucketName = process.env._AWS_BUCKET_NAME as string;
 const  s3 = new AWS({ region,accessKeyId, secretAccessKey});
 
  export  const uploadS3 = async(file:any): Promise<object | any> => {
-  const fileStream = await fs.createReadStream(file.path)   
-  const uploadParams = {
-    Bucket: bucketName,
-    Body: fileStream,
-    Key: file.filename
-  }
+  try {
+    const fileStream = await fs.createReadStream(file.path)   
+    const uploadParams = {
+      Bucket: bucketName,
+      Body: fileStream,
+      Key: file.filename
+    }
+  
+    const uploadToBucket = await s3.upload(uploadParams).promise();
+    return uploadToBucket;
+    
+  } catch (error:any) {
+    throw new Error(error.message);
+  };
 
-  const uploadToBucket = await s3.upload(uploadParams).promise();
-  return uploadToBucket;
 }
 
 export  const uploadMultipleS3 = async(files:Array<any>): Promise<Array<object> | any> => {

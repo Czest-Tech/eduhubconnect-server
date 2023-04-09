@@ -43,6 +43,11 @@ class UserService {
                         ]
             
             }
+            const createAcounts = (accountType:number) => {
+                if(accountType === 1 ){
+                    
+                }
+            }
             await this.createOrupdateUserSettings({userId:creatUser._id}, userSettings)
             return creatUser;
         } catch(error:any) {
@@ -53,7 +58,6 @@ class UserService {
     public async update(update:FilterQuery<UserDocument>,query:UpdateQuery<UserDocument>) {
         try {
             const updateUser =  await this.user.findOneAndUpdate(update, query,{returnDocument:"after"});
-            console.log(updateUser)
             return updateUser;
         } catch (error:any) {
             throw new Error(error.message);
@@ -66,12 +70,11 @@ class UserService {
             return creatUser;
         } catch (error:any) {
             throw new Error(error.message);
-            
         }
     }
     public async getAllUsers() {
         try {
-            const getAllUsers =  await this.user.find(  { $unset: { passwod: ""} });
+            const getAllUsers =  await this.user.aggregate(  [{ $set: { password: ""} }]);
             return getAllUsers;
         } catch (error:any) {
             throw new Error(error.message);

@@ -81,15 +81,13 @@ export interface Blogs extends Document {
     title: string;
     content: string;
     description: string;
-    posted:string;
-    category: number;
-    thumbnail: string;
+    published:boolean;
+    category: BlogCategory["_id"];
+    thumbnail: Array<any>;
     view:number;
     shared: number;
     nameSlug:string;
     tags: string;
-    created_at: number;
-    created_by: number;
     postedBy:User["_id"];
 }
 export interface BlogCategory extends Document { 

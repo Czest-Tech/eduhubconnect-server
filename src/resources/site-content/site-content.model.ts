@@ -83,14 +83,28 @@ const blogsSchema = new Schema({
     title: {type: String, required: false},
     content: {type: String, required: false},
     description: {type: String, required: false},
-    posted:{type: String, required: false},
-    category: {type: String, required: false},
-    thumbnail: {type: String, required: false},
-    view:{type: Number, required: false},
-    shared: {type: Number, required: false},
+    published:{
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    category: {
+        type:Schema.Types.ObjectId,
+        ref: "BlogCategory",
+        required: true
+    },
+    thumbnail: {type: Array, required: false},
+    view:{
+        type: Number,
+        default:0,
+        required: false
+    },
+    shared: {
+        type: Number,
+        default:0,
+        required: false
+    },
     tags: {type: String, required: false},
-    created_at: {type: Number, required: false},
-    created_by: {type: Number, required: false},
     postedBy: {
         type:Schema.Types.ObjectId,
         ref: "User",

@@ -14,6 +14,7 @@ import EmailHandler from '../../utils/emailHandler';
 import SMSHandler from '../../utils/smsHandler';
 
 class UserController implements Controller {
+
     public router = Router();
     public path = '/user';
     private upload  =  multer({ dest: './'});
@@ -29,34 +30,28 @@ class UserController implements Controller {
     private verifyUser = '/verify-email'
     private verifyUserSms = '/verify-sms'
     private unlinkFile = util.promisify(fs.unlink);
-    // private upload  =  multer({ dest: '/uploads' });
-
 
     private userService =  new UserService()
     private initHashClass =  new HashKeys();
-    private smsHander = new SMSHandler()
+    private smsHander = new SMSHandler();
+
     constructor(){
         this.initialiseRoutes()
     }
 
     private initialiseRoutes():void {
+        this.router.delete(`${this.path+this.deleteUser}`, this.delete);
+        this.router.patch(`${this.path+this.userUpdate}`, validationMiddleware(updateUser), this.update);
         this.router.post(`${this.path+this.uploadUserPicture}`,[ this.upload.single('image'), validationMiddleware(uploadImage)], this.uploadProfilePicture);
         this.router.post(`${this.path+this.uploadUserCover}`,[ this.upload.single('image'), validationMiddleware(uploadImage)], this.uploadProfileCover);
-
         this.router.post(`${this.path+this.userRegisterEndoint}`, validationMiddleware(signup), this.create);
-        this.router.patch(`${this.path+this.userUpdate}`, validationMiddleware(updateUser), this.update);
-        this.router.delete(`${this.path+this.deleteUser}`, this.delete);
+        this.router.post(`${this.path+this.updateUserSettingsEndpoint}`, this.updateUserSettings);
+        this.router.post(this.path+this.verifyUser, this.verificationFunction );
+        this.router.post(this.path+this.verifyUserSms, this.SMSVerificationFunction );
+        this.router.get(this.path+this.verifyUser, this.GetVerificationFunction );
+        this.router.get(`${this.path+this.getUserById}`, this.getUserByID);
         this.router.get(`${this.path+this.getAllUsersEndpoint}`, this.getAllUsers);
         this.router.put(`${this.path+this.updateProfileInfo}`, this.updateUserInfo);
-        this.router.get(`${this.path+this.getUserById}`, this.getUserByID);
-        this.router.post(`${this.path+this.updateUserSettingsEndpoint}`, this.updateUserSettings);
-        this.router.post(this.path+this.verifyUser, this.verificationFunction )
-        this.router.get(this.path+this.verifyUser, this.GetVerificationFunction )
-        this.router.post(this.path+this.verifyUserSms, this.SMSVerificationFunction )
-
-
-  
-
     }
 
     private create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -133,8 +128,8 @@ class UserController implements Controller {
             }
             
                
-        } catch (error) {
-            next(new HttpException(400, 'can not delete user'))
+        } catch (error:any) {
+            next(new HttpException(400, error.messsage))
         }
     }
     private uploadProfilePicture = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

@@ -77,7 +77,35 @@ export default class SiteContentService {
 
     public async getBlogs(limit:any = 20,skip:any = 0): Promise<any> {
         try {
-            return  await this.blogs.find().skip(skip).limit(limit);
+            return  await this.blogs.aggregate([
+                {
+                    $lookup: {
+                        from: "blogcategories",
+                        localField: "category",
+                        foreignField: "_id",
+                        as: "categoryName"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "postedBy",
+                        foreignField: "_id",
+                        as: "postedByName"
+                    }
+                },
+                {
+                    $set: {
+                        categoryName: { $arrayElemAt: ["$categoryName.name", 0] },
+                        postedByName: { 
+                            $concat:[ 
+                                { $arrayElemAt: ["$postedByName.firstName", 0] }," ",
+                                { $arrayElemAt: ["$postedByName.lastName", 0] }
+                            ]
+                        }    
+                    }
+                }          
+            ]).skip(skip).limit(limit);
         } catch (error: any) {
             throw new Error(error.message);
 
@@ -96,7 +124,7 @@ export default class SiteContentService {
         
             return await this.programs.find( 
              
-                { programs :  {$regex : `^${program}.*` , $options: 'si' },university : { $regex : `^${university}.*` , $options: 'si' }}
+                { programs : { $regex :   `^${program}.*`, $options: 'si' },university : { $regex : `^${university}.*` , $options: 'si' }}
                
             
             ).skip( Number(skip) || 0).limit(Number(limit) || 0);
@@ -105,6 +133,10 @@ export default class SiteContentService {
 
         }
     }
+    protected textLike(str:string) {
+        var escaped = str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+        return new RegExp(escaped, 'i');
+      }
     public async getScholarships(limit:any = 20,skip: any = 0): Promise<any> {
         try {
             return  await this.scholarship.find().skip(skip).limit(limit);
@@ -115,11 +147,38 @@ export default class SiteContentService {
     }
     public async getSingleBlog(query: FilterQuery<Blogs>): Promise<any> {
         try {
-            const products: any = await this.blogs.aggregate([
-                { $match: query }          
+            const blog: any = await this.blogs.aggregate([
+                { $match: query },
+                {
+                    $lookup: {
+                        from: "blogcategories",
+                        localField: "category",
+                        foreignField: "_id",
+                        as: "categoryName"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "postedBy",
+                        foreignField: "_id",
+                        as: "postedByName"
+                    }
+                },
+                {
+                    $set: {
+                        categoryName: { $arrayElemAt: ["$categoryName.name", 0] },
+                        postedByName: { 
+                            $concat:[ 
+                                { $arrayElemAt: ["$postedByName.firstName", 0] }," ",
+                                { $arrayElemAt: ["$postedByName.lastName", 0] }
+                            ]
+                        }    
+                    }
+                }          
             ])
             
-            return products;
+            return blog;
         } catch (error: any) {
             throw new Error(error.message);
         }

@@ -16,8 +16,7 @@ class SiteContentController implements Controller {
     private unlinkFile = util.promisify(fs.unlink);
     public path: string = '/main-site';
     private upload = multer({ dest: "./" });
-    private blogsEndPoint = '/blogs';
-    private blogCreateEndPoint = '/blog';
+    private blogsEndPoint = '/blog';
     private blogUpdateEndPoint = '/blog/:id';
     private blogsCategoryEndPoint = '/blog-categories';
     private blogsCategoryDeleteOrUpdateEndPoint = '/blog-categories/:id';
@@ -34,15 +33,13 @@ class SiteContentController implements Controller {
     }
 
     private initialiseRoutes(): void {    
-        this.router.get(`${this.path + this.blogsEndPoint}`, this.getBlogs);
         this.router.delete(`${this.path + this.blogUpdateEndPoint}`, this.deleteBlogs);
-        this.router.patch(`${this.path + this.blogUpdateEndPoint}`, this.updateBlogs);
-        this.router.post(`${this.path + this.blogCreateEndPoint}`, this.createBlogs);
-        this.router.post(`${this.path + this.blogsCategoryEndPoint}`, this.createBlogCategory);
-        this.router.patch(`${this.path + this.blogsCategoryDeleteOrUpdateEndPoint}`, this.updateBlogCategory);
         this.router.delete(`${this.path + this.blogsCategoryDeleteOrUpdateEndPoint}`, this.deleteBlogCategory);
-
-
+        this.router.patch(`${this.path + this.blogUpdateEndPoint}`, this.updateBlogs);
+        this.router.patch(`${this.path + this.blogsCategoryDeleteOrUpdateEndPoint}`, this.updateBlogCategory);
+        this.router.post(`${this.path + this.blogsEndPoint}`,[ this.upload.single('picture')], this.createBlogs);
+        this.router.post(`${this.path + this.blogsCategoryEndPoint}`,[ this.upload.single('image')], this.createBlogCategory);
+        this.router.get(`${this.path + this.blogsEndPoint}`, this.getBlogs);
         this.router.get(`${this.path + this.programsEndPoint}`, this.getPrograms);
         this.router.get(`${this.path + this.universitiesEndPoint}`, this.getUniversities);
         this.router.get(`${this.path + this.universityEndPoint}`, this.getUniversity);
@@ -124,21 +121,30 @@ class SiteContentController implements Controller {
     }
     private createBlogs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const { name} = req.body;
-            const file = req.files as any; 
-            req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
-            
-            const blogs = await this.mainSite.createBlog(req.body)
 
+            const { title } = req.body;
+            const file = req.file as any; 
+
+            const result = await uploadS3(file);
+            await this.unlinkFile(file.path);
+
+            req.body["thumbnail"] = result;
+            req.body["nameSlug"] = new HashKeys().slugify(title +"-ref-"+ new Date().getTime().toString())
+              
+            const blogs = await this.mainSite.createBlog(req.body)
             res.status(201).json(blogs)
+            
         } catch (error: any) {
             next(new HttpException(201, error.message))
         }
     }
     private createBlogCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
+            const file = req.file as any;
             const {name} = req.body; 
-
+            const result = await uploadS3(file)
+            await this.unlinkFile(file.path)
+            req.body["images"] = result;
             req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
             const category = await this.mainSite.createBlogCategory(req.body)
 
