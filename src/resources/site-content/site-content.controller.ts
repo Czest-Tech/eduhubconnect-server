@@ -50,17 +50,16 @@ class SiteContentController implements Controller {
 
     private getUniversities = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const universities = await this.mainSite.getUniversity()
-            res.status(201).json({ universities })
+            const universities = await this.mainSite.getUniversity(req)
+            res.status(201).json(universities)
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }
     }
     private getScholarships = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const {limit, skip} = req.query;
-            const scholarships = await this.mainSite.getScholarships(limit, skip)
-            res.status(201).json({ scholarships })
+            const scholarships = await this.mainSite.getScholarships(req)
+            res.status(201).json(scholarships)
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }
@@ -71,7 +70,6 @@ class SiteContentController implements Controller {
             const {id} = req.params;
             let blogs : any = [];
             if(id){
-              
                  blogs = await this.mainSite.getSingleBlog({_id:new mongoose.Types.ObjectId(id as any) })
                  return res.status(201).json(blogs[0])
                 } else {

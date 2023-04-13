@@ -12,17 +12,19 @@ export default class SiteContentService {
     public async searchPrograms(data: string): Promise<any> {
         try {
             const program = await this.programs.aggregate(
-                [{
-                    $search: {
-                        index: "default",
-                        text: {
-                          query:  data,
-                          path: {
-                            wildcard: "*"
-                          }
+                [
+                    {
+                        $search: {
+                            index: "default",
+                            text: {
+                            query:  data,
+                            path: {
+                                wildcard: "*"
+                            }
+                            }
                         }
-                      }
-                }]
+                    }
+                ]
             );
             return program;
         } catch (error: any) {
@@ -111,9 +113,77 @@ export default class SiteContentService {
 
         }
     }
-    public async getUniversity(query?: FilterQuery<University>): Promise<any> {
+    public async getUniversity(req:any): Promise<any> {
         try {
-            return query?  await this.university.find(query) : this.university.find();
+            let uiValues:any = {
+                filtering: {},
+                sorting: {},
+            } as any;
+
+            const queryObj = { ...req.query } as any;
+            const excludeFields = ["page", "sort", "limit", "fields"];
+            excludeFields.forEach((el) => {
+                delete queryObj[el]
+            });
+            for(let el in queryObj ) {
+                if(typeof queryObj[el] === "object") {
+                    if( Object.keys(queryObj[el])[0] === "regex"){
+                        if(queryObj[el][Object.keys(queryObj[el])[0]] === ""){
+                            delete queryObj[el];
+                        } else {
+                            // queryObj[el]["regex"] = `/${queryObj[el][Object.keys(queryObj[el])[0]]}/`
+                            queryObj[el]["options"] = 'i';
+                        }
+                    }
+                }
+
+            }
+            let queryStr = JSON.stringify(queryObj);
+            queryStr = queryStr.replace(/\b(gte|gt|lte|lt|in|regex|options)\b/g, (match) =>{
+                
+               return `$${match}`
+            });
+            
+            let query = this.university.find(JSON.parse(queryStr));
+        
+            // Sorting
+        
+            if (req.query.sort) {
+              const sortBy = req.query.sort.split(",").join(" ");
+              query = query.sort(sortBy);
+            } else {
+              query = query.sort("-createdAt");
+            }
+        
+            // limiting the fields
+        
+            if (req.query.fields) {
+              const fields = req.query.fields.split(",").join(" ");
+              query = query.select(fields);
+            } else {
+              query = query.select("-__v");
+            }
+
+            const filterKeys = Object.keys(queryObj);
+            const filterValues = Object.values(queryObj);
+
+            filterKeys.forEach(
+                (val, idx) => (uiValues.filtering[val] = filterValues[idx])
+            );
+        
+            // pagination
+            let results;
+
+            const page = req.query.page;
+            const limit = req.query.limit;
+            const skip = (page - 1) * limit;
+            query = query.skip(skip).limit(limit);
+            if (req.query.page) {
+               results = await this.university.countDocuments(JSON.parse(queryStr));
+              if (page >= results) throw new Error("This Page does not exists");
+            }
+             const universities =  await query;
+             return {universities,results,filterKeys}
         } catch (error: any) {
             throw new Error(error.message);
 
@@ -129,7 +199,6 @@ export default class SiteContentService {
             const queryObj = { ...req.query } as any;
             const excludeFields = ["page", "sort", "limit", "fields"];
             excludeFields.forEach((el) => {
-
                 delete queryObj[el]
             });
             for(let el in queryObj ) {
@@ -201,13 +270,80 @@ export default class SiteContentService {
     protected textLike(str:string) {
         var escaped = str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
         return new RegExp(escaped, 'i');
-      }
-    public async getScholarships(limit:any = 20,skip: any = 0): Promise<any> {
+    }
+    public async getScholarships(req:any): Promise<any> {
         try {
-            return  await this.scholarship.find().skip(skip).limit(limit);
+            let uiValues:any = {
+                filtering: {},
+                sorting: {},
+            } as any;
+
+            const queryObj = { ...req.query } as any;
+            const excludeFields = ["page", "sort", "limit", "fields"];
+            excludeFields.forEach((el) => {
+                delete queryObj[el]
+            });
+            for(let el in queryObj ) {
+                if(typeof queryObj[el] === "object") {
+                    if( Object.keys(queryObj[el])[0] === "regex"){
+                        if(queryObj[el][Object.keys(queryObj[el])[0]] === ""){
+                            delete queryObj[el];
+                        } else {
+                            // queryObj[el]["regex"] = `/${queryObj[el][Object.keys(queryObj[el])[0]]}/`
+                            queryObj[el]["options"] = 'i';
+                        }
+                    }
+                }
+
+            }
+            let queryStr = JSON.stringify(queryObj);
+            queryStr = queryStr.replace(/\b(gte|gt|lte|lt|in|regex|options)\b/g, (match) =>{
+                
+               return `$${match}`
+            });
+            
+            let query = this.scholarship.find(JSON.parse(queryStr));
+        
+            // Sorting
+        
+            if (req.query.sort) {
+              const sortBy = req.query.sort.split(",").join(" ");
+              query = query.sort(sortBy);
+            } else {
+              query = query.sort("-createdAt");
+            }
+        
+            // limiting the fields
+        
+            if (req.query.fields) {
+              const fields = req.query.fields.split(",").join(" ");
+              query = query.select(fields);
+            } else {
+              query = query.select("-__v");
+            }
+
+            const filterKeys = Object.keys(queryObj);
+            const filterValues = Object.values(queryObj);
+
+            filterKeys.forEach(
+                (val, idx) => (uiValues.filtering[val] = filterValues[idx])
+            );
+        
+            // pagination
+            let results;
+
+            const page = req.query.page;
+            const limit = req.query.limit;
+            const skip = (page - 1) * limit;
+            query = query.skip(skip).limit(limit);
+            if (req.query.page) {
+               results = await this.scholarship.countDocuments(JSON.parse(queryStr));
+              if (page >= results) throw new Error("This Page does not exists");
+            }
+             const scholarships =  await query;
+             return {scholarships,results,filterKeys}
         } catch (error: any) {
             throw new Error(error.message);
-
         }
     }
     public async getSingleBlog(query: FilterQuery<Blogs>): Promise<any> {
@@ -267,22 +403,22 @@ export default class SiteContentService {
     }
     public async getSingleProgram(query: FilterQuery<Program>): Promise<any> {
         try {
-            const products: any = await this.programs.aggregate([
+            const program: any = await this.programs.aggregate([
                 { $match: query }          
             ])
             
-            return products;
+            return program;
         } catch (error: any) {
             throw new Error(error.message);
         }
     }
     public async getSingleUnversity(query: FilterQuery<University>): Promise<any> {
         try {
-            const products: any = await this.university.aggregate([
+            const unversity = await this.university.aggregate([
                 { $match: query }          
             ])
             
-            return products;
+            return unversity;
         } catch (error: any) {
             throw new Error(error.message);
         }
