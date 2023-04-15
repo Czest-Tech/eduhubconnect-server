@@ -3,9 +3,6 @@ require('dotenv').config()
 import fs from 'fs';
 import  AWS  from 'aws-sdk/clients/s3';
 
-
-
-     
 const region:string = process.env._AWS_BUCKET_REGION as string;
 
 const accessKeyId:string = process.env._AWS_ACCESS_KEY as string;

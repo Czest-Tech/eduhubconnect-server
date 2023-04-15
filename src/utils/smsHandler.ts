@@ -33,13 +33,5 @@ export default class SMSHandler {
            return error;
         })
     }
-    // sendEmailVerification(email:string){
-        
-    //     this.sendObject.email = email;
-    //     // let comfirmText = `Hello ${username} \n <br> Welcome to Mabine, `
-    //     return this.sendEmail()
-
-    // }
-
 
 }

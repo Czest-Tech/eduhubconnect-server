@@ -45,12 +45,9 @@ export default class EmailHandler {
            return error;
         })
     }
-    sendEmailVerification(email:string){
-        
+    sendEmailVerification(email:string){     
         this.sendObject.email = email;
-        // let comfirmText = `Hello ${username} \n <br> Welcome to Mabine, `
         return this.sendEmail()
-
     }
 
 

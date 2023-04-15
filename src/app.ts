@@ -44,7 +44,7 @@ class App {
          controllers.forEach(controller => {
              this.express.use('/api', controller.router);
          });
-    }7
+    }
     private initialiseErrorHandling(): void {
         this.express.use(ErrorMiddleware);
     }
@@ -54,7 +54,6 @@ class App {
     private initialiseDatabaseConnection(): void {
         const { MONGO_USER, MONGO_PASSWORD, MONGO_PATH } = process.env;
 
-        // console.log(`mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}${MONGO_PATH}`)
         mongoose.connect(
             `mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}${MONGO_PATH}`
             // `mongodb//${MONGO_USER}:${MONGO_PASSWORD}${MONGO_PATH}` ##for docker config
