@@ -12,8 +12,8 @@ import HttpException from '../../utils/exceptions/http.exception';
 
 class JobsController implements Controller {
     public router =  Router();
+    public path: string = '/jobs';
     private unlinkFile = util.promisify(fs.unlink);
-    public path: string = 'jobs';
     private upload = multer({ dest: "./" });
     private createJobsEndPoint = '/create';
     private updateJobsEndPoint = '/update';
@@ -23,7 +23,7 @@ class JobsController implements Controller {
     private getNearJobsEndPoint = '/get-near-me';
     private searchProduct = '/search'
     private getRecommendedJobsEndPoint = '/get-recommended';
-    private getShopJobsEndPoint = '/get-shop-jobs/:shopId'
+    private getShopJobsEndPoint = '/get-company-jobs'
     private getPromotedJobsEndPoint = '/get-promoted';
     private getRelateJobsEndPoint = '/get-related';
     
@@ -34,30 +34,29 @@ class JobsController implements Controller {
 
     private initialiseRoutes(): void {
         this.router.post(`${this.path + this.createJobsEndPoint}`, [this.upload?.array("images")], this.create);
-        this.router.post(`${this.path + this.updateJobsEndPoint}`, [this.upload?.array("updateImages")], this.update);
-        this.router.post(`${this.path + this.getAllJobsEndPoint}`, this.getAllJobs);
+        this.router.patch(`${this.path + this.updateJobsEndPoint}`, [this.upload?.array("images")], this.update);
+        this.router.get(`${this.path + this.getAllJobsEndPoint}`, this.getAllJobs);
         this.router.post(`${this.path + this.searchProduct}`, this.searchJobs);
         this.router.get(`${this.path + this.getShopJobsEndPoint}`, this.getCompanyJobs);
         this.router.get(`${this.path + this.getOneJobsEndPoint}`, this.getJob);
         this.router.delete(`${this.path + this.deleteJobsEndPoint}`, this.deleteJob);
-
-
     }
     private create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const { userId,name} = req.body;
+            const { name} = req.body;
             const file = req.files as any;
 
             const result = file ? await uploadMultipleS3(file) : []
-       
+            await this.unlinkFile(file.path)
+
             req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
             
             req.body["attachments"] = result;
             const jobs = await this.jobsService.create(req.body)
 
-            res.status(201).json({ jobs })
+            res.status(201).json(jobs)
         } catch (error: any) {
-            next(new HttpException(201, error.message))
+            next(new HttpException(error.status, error.message))
         }
     }
     private update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -67,37 +66,28 @@ class JobsController implements Controller {
             const filterImages: any[] = [];
             var result:any;
             const { imagesToDelete, jobId } = req.body;
-            JSON.parse(imagesToDelete)
-            var imagesToRemove: any[] = [];
-            if (imagesToDelete) {
-                if (typeof imagesToDelete == "string") {
-                    imagesToRemove = imagesToDelete.split(',');
-                } else if (typeof imagesToDelete == "object") {
-                    imagesToRemove = imagesToDelete;
-                }
-            }
-
-            if (imagesToRemove.length !== 0) {
-                await deleteMultipleS3(imagesToRemove as unknown as Array<any>);
+          
+            if (imagesToDelete.length !== 0) {
+                await deleteMultipleS3(imagesToDelete as unknown as Array<any>);
             }
             if (file) {
                 result = await uploadMultipleS3(file)
             }
 
-            const { attachments } = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
-            attachments.forEach((element: any) => {
+            const data = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
+            data[0].attachments.forEach((element: any) => {
                 if (!imagesToDelete.includes(element.key)) {
                     filterImages.push(element)
                 }
             });
             this.UnlinkMultipleDownload(file)
             if(filterImages || result ){
-                req.body["attachments"] = [...filterImages, ...result ];
-
+                const combinedImages = [...filterImages, ...result ];
+                req.body["attachments"] = combinedImages;
             }
-            const product = await this.jobsService.update(req.body, jobId)
+            const jobs = await this.jobsService.update(req.body, jobId)
 
-            res.status(201).json({ product })
+            res.status(201).json(jobs)
         } catch (error: any) {
             if (error instanceof multer.MulterError) {
                 // A Multer error occurred when uploading.
@@ -114,38 +104,36 @@ class JobsController implements Controller {
         try {
             const { query } = req.body;
             const jobs = await this.jobsService.searchJobs(query)
-            res.status(201).json({ jobs })
+            res.status(201).json(jobs)
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }
     }
     private getAllJobs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            // this.updateNAmeSlugs()
-            const { userId } = req.body
-            const jobs = await this.jobsService.getJobs()
+            const jobs = await this.jobsService.getJobs(req)
 
-            res.status(201).json({ jobs })
+            res.status(201).json(jobs)
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }
     }
     private getJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const { jobId } = req.params;
-            const product = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
 
-            res.status(201).json({ product })
+            const { jobId } = req.params;
+            const job = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
+
+            res.status(201).json(job)
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }
     }
     private getCompanyJobs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const { companyId } = req.params;
-            const jobs = await this.jobsService.getJobs({ postedBy: new mongoose.Types.ObjectId(companyId) })
+            const jobs = await this.jobsService.getJobs(req)
 
-            res.status(201).json({ jobs })
+            res.status(201).json(jobs)
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }
@@ -153,9 +141,8 @@ class JobsController implements Controller {
     private deleteJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const { jobId } = req.params;
-            console.log(req.params)
-            const product = await this.jobsService.deleteJob(jobId)
-            res.status(201).json({ delete: true, product: product })
+            const job = await this.jobsService.deleteJob(jobId)
+            res.status(201).json({ delete: true, job })
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }

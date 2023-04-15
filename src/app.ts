@@ -24,7 +24,7 @@ class App {
         this.initSession()
         this.initialiseDatabaseConnection();
         this.initialiseMiddleware();
-        // this.validateSessions();
+        this.validateSessions();
         this.initialiseControllers(controllers);
         this.initialiseErrorHandling();
     }
@@ -44,7 +44,7 @@ class App {
          controllers.forEach(controller => {
              this.express.use('/api', controller.router);
          });
-    }
+    }7
     private initialiseErrorHandling(): void {
         this.express.use(ErrorMiddleware);
     }

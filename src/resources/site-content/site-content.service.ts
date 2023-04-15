@@ -180,7 +180,7 @@ export default class SiteContentService {
             query = query.skip(skip).limit(limit);
             if (req.query.page) {
                results = await this.university.countDocuments(JSON.parse(queryStr));
-              if (page >= results) throw new Error("This Page does not exists");
+               if (page >= results) throw new Error("This Page does not exists");
             }
              const universities =  await query;
              return {universities,results,filterKeys}

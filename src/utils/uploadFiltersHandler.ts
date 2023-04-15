@@ -65,7 +65,7 @@ export  const uploadMultipleS3 = async(files:Array<any>): Promise<Array<object> 
 
 export  const deleteMultipleS3 = async(files:any): Promise<object | any> => {
 
-  const file = JSON.parse(files)
+  const file = files
   var len = file.length;
   var fileStruct:any[] = [];
   var filefilesbject:any[] = [];
