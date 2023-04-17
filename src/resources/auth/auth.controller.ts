@@ -12,6 +12,7 @@ import passport from "passport";
 import { env } from 'process';
 import { AnyARecord } from 'dns';
 import mongoose from 'mongoose';
+import { User } from '../user/user.interface';
 class AuthController implements Controller {
   public router = Router();
   public path = "/auth";
@@ -19,6 +20,8 @@ class AuthController implements Controller {
   public logOutRoute = "/logout";
   public loginGoogle = "/google";
   public getSesion = "/get-session";
+  public reSendVerificatione = "/re-send-verification";
+
   private changePasswordRoute = "/change-password"
 
   private hashKeys = new HashKeys();
@@ -40,11 +43,11 @@ class AuthController implements Controller {
     this.router.get(this.path + this.loginGoogle, passport.authenticate("google", { scope: ["profile", "email"] }));
     this.router.get(`${this.path + this.loginRoute + this.loginGoogle}`, this.loginWithGoogle);
     this.router.get(`${this.path + this.loginGoogle}/callback`, passport.authenticate("google", { failureRedirect: this.loginFailureRedirect }), this.loginWithGoogleCallBack);
-
+    this.router.post(`${this.path + this.reSendVerificatione}`, this.reSendVerification)
   }
 
   private loginUser = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    var loginResponse = [];
+    var loginResponse = {};
     try {
 
       const { email, password } = req.body;
@@ -53,14 +56,18 @@ class AuthController implements Controller {
         const checkPassword = await this.hashKeys.checkPasswordHash(password, checkLogin.password);
 
         if (checkPassword) {
+          if(checkLogin.isEmailVerified as any){
+            checkLogin
+            const createUserSession = await this.sessionHandler.CreateUserSession(checkLogin, req.get("user-agent") || "")
 
-          loginResponse.push(checkLogin)
-          const createUserSession = await this.sessionHandler.CreateUserSession(checkLogin, req.get("user-agent") || "")
 
+             return res.send({checkLogin,createUserSession})
+          } else {
+             return res.send({email:email, isEmailVerified:checkLogin.isEmailVerified})
+          }
+          
 
-          loginResponse.push({ session: createUserSession });
-
-          return res.send(loginResponse)
+          
         } else {
           let errors = { errors: ["wrong password"] } as any;
           return next(new HttpException(401, errors))
@@ -153,6 +160,32 @@ class AuthController implements Controller {
     } 
     
   }
+  private reSendVerification = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+      const {email,token,type }=  req.body;
+      const checCode = await this.userService.verificationCode(req.body)
+      console.log(checCode)
+          if(checCode){
+            if(type === "resend"){
+              res.status(201).json({status:201,type:type,loggedIn:false})
+            } else {
+        
+              const userData = await this.userService.findUser(email)
+              const createUserSession = await this.sessionHandler.CreateUserSession(userData, req.get("user-agent") || "")
+              
+              if(userData?.isEmailVerified){
+                return  res.status(201).json({userData,createUserSession,status:201,type:type, loggedIn:true})
+              }
+            }
+          }
+
+          return  res.status(201).json({status:401,type:type,loggedIn:false})
+
+      
+    } catch (error:any) {
+        console.log(error.message)
+    }
+ }
 
 }
 export default AuthController;

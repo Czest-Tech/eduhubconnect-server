@@ -1,14 +1,17 @@
 import mongoose,{ FilterQuery, UpdateQuery } from 'mongoose';
 import UserModel from './user.model'
 import UserSettingsModel from './userSettings.model'
-import {User, UserDocument,UserSettings} from './user.interface'
+import {User, UserDocument,UserSettings,UserVerification,UserVerificationResend} from './user.interface'
 import userVerificationModel from './userVerification.model';
+import HashKeys from '../../utils/hashKeys';
+import EmailHandler from '../../utils/emailHandler';
 
 class UserService {
     private user = UserModel;
     private userSettingsModel = UserSettingsModel;
     private userVerification = userVerificationModel;
-
+    private hashKeys = new HashKeys();
+    private emailHandler = new EmailHandler()
 
     public async create(firstName:string, lastName: string, email:string, password:string,accountType:string): Promise<User> {
         try {
@@ -48,13 +51,59 @@ class UserService {
                     
                 }
             }
+            if(creatUser._id){
+                const mailCode = this.hashKeys.generateKey(6,"IUoid1o3noi3u3IH5n4oi766UG89O56ijO8gvBHfgty");
+                this.emailHandler.setFieldText(firstName, mailCode);
+                this.emailHandler.setRecepient({email:email});
+                const data = {email:email,token:mailCode, isExpired:false}
+                await this.emailHandler.sendMailTrap();
+                await this.userVerification.updateOne({userId: new mongoose.Types.ObjectId(creatUser._id)}, data,{upsert:true})
+            }
             await this.createOrupdateUserSettings({userId:creatUser._id}, userSettings)
+
+
             return creatUser;
         } catch(error:any) {
             throw new Error(error.message);
             
         }
     }
+
+    public async verificationCode (filterQuery:any): Promise<boolean | undefined>  {
+        
+        try{
+            const {token, type, email} = filterQuery;
+            const send =  await this.userVerification.find({email: email});
+
+            if(type === 'resend'){
+               if(send){
+                const mailCode = this.hashKeys.generateKey(6,"IUoid1o3noi3u3IH5n4oi766UG89O56ijO8gvBHfgty");
+                this.emailHandler.setFieldText("User", mailCode);
+                this.emailHandler.setRecepient({email:email});
+                const data = {email:email,token:mailCode, isExpired:false}
+                await this.emailHandler.sendMailTrap();
+                await this.userVerification.updateOne({email:email}, data,{upsert:true})
+                return true;
+               } 
+               return false
+            }
+            
+            if(type === "verify") {
+                if(send[0].token === token && !send[0].isExpired){
+                 const updateOne =  await this.user.updateOne({_id:new mongoose.Types.ObjectId(send[0].userId)}, {isEmailVerified:true});
+                 const updateTwo = await this.userVerification.updateOne({email:email},{isExpired:true});
+                 return true
+                } else {
+                    return false
+                }
+            }
+
+        } catch (error:any) {
+            throw new Error(error.message);
+
+        }
+    }
+
     public async update(update:FilterQuery<UserDocument>,query:UpdateQuery<UserDocument>) {
         try {
             const updateUser =  await this.user.findOneAndUpdate(update, query,{returnDocument:"after"});

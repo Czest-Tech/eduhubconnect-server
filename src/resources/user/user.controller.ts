@@ -62,7 +62,7 @@ class UserController implements Controller {
             if(hashedPassword){
                  const user =  await this.userService.create(firstName,lastName,email,hashedPassword,accountType) as any
                  (user && (delete  user["password"]))
-                 res.status(201).json({user})
+                 res.status(201).json(user)
             } else {
                 res.status(501).json(new HttpException(400, 'can not create user'))
             }
@@ -137,8 +137,8 @@ class UserController implements Controller {
            
             const file = req.file as any;
             const {userId,profileSource } = req.body;
-            const result = await uploadS3(file)
-            await this.unlinkFile(file.path)
+            const result = await uploadS3(file);
+            await this.unlinkFile(file.path);
             
             const user =  await this.userService.update({_id:new mongoose.Types.ObjectId(userId) }, {profilePhoto:result,profilePhotoSource:profileSource})
 
@@ -202,7 +202,7 @@ class UserController implements Controller {
             dynamic_template_data: {code:comfirmationNumber,first_name:UserName, Sender_Name:"Ma Bine", Sender_City:"Lusaka,Zambia",Sender_Zip:"101010", Sender_Address:"Nalikwanza Rd, Woodlands"} as any,
             
         }
-         const newEmaiil =  new EmailHandler(sendObj);
+         const newEmaiil =  new EmailHandler();
          const sendEmail =  await newEmaiil.sendEmail();
          const user =  await this.userService.createOrupdateUserVerificationSettings({userId:new mongoose.Types.ObjectId(userId)}, userSaveData)
          res.status(201).json({message:"succesiful"})
@@ -214,9 +214,19 @@ class UserController implements Controller {
     }
     private GetVerificationFunction = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const {userId,code, email }=  req.body;
-            const checCode = await this.userService.verifyCode({userId: new mongoose.Types.ObjectId(userId)}, {email:email, token:code})
-            console.log(checCode)
+            const {email,code,type }=  req.body;
+            const checCode = await this.userService.verificationCode({email:email, type:type,token:code})
+            if(type === "resend"){
+                if(checCode){
+                    res.status(201).json({status:true})
+                } else {
+                    res.status(201).json({status:false})
+                }
+            } else {
+                if(checCode){
+                    
+                }
+            }
         } catch (error:any) {
             console.log(error.message)
         }

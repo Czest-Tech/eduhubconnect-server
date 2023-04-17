@@ -1,4 +1,4 @@
-import {Document} from 'mongoose'
+import {Document, ObjectId} from 'mongoose'
 
 interface UpdateUser extends Document{
     firstName: string;
@@ -6,6 +6,7 @@ interface UpdateUser extends Document{
     email:string;
 }
 interface User extends UpdateUser,Document {
+  isEmailVerified: boolean;
   password: string;
   about?:string;
   profilePhoto?:Array<any>;
@@ -37,6 +38,10 @@ interface UserVerification extends  Document {
   isExpired:boolean;
   
 }
+interface UserVerificationResend extends  Document,UserVerification {
+  _id:ObjectId;
+  
+}
 interface StudentAccount extends UserDocument {
   userId : User["_id"];
   skills: Array<any>;
@@ -66,4 +71,4 @@ interface CompanyUsers extends UserDocument {
   userType:number;
 }
  
-export { User, UserDocument, Agent, CompanyUsers, Company,UpdateUser, UserSettings, StudentAccount, UserVerification }
+export { User, UserDocument, Agent, CompanyUsers,UserVerificationResend, Company,UpdateUser, UserSettings, StudentAccount, UserVerification }
