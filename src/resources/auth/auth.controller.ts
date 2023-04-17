@@ -167,14 +167,14 @@ class AuthController implements Controller {
       console.log(checCode)
           if(checCode){
             if(type === "resend"){
-              res.status(201).json({status:201,type:type,loggedIn:false})
+              res.status(201).json({status:201,type:type,loggedIn:false, reference:checCode})
             } else {
         
               const userData = await this.userService.findUser(email)
               const createUserSession = await this.sessionHandler.CreateUserSession(userData, req.get("user-agent") || "")
               
               if(userData?.isEmailVerified){
-                return  res.status(201).json({userData,createUserSession,status:201,type:type, loggedIn:true})
+                return  res.status(201).json({userData,createUserSession,status:201,type:type, loggedIn:true,reference:checCode})
               }
             }
           }
