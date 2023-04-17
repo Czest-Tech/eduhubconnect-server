@@ -32,13 +32,7 @@ class SessionController {
   }
   async getUserSession(id:any) {
     const user = await this.sessionHandler.FindSessions({ accessToken: id, valid: true });
-    // let userData = undefined;
-    // cons
-    // if(user) {
-    //   userData =  await this.userService.getUserByID(user);
-    // }
-     console.log(user);
-    return user;
+    return user[0];
   }
 
   async validateAndReissueTokens(refreshToken: any, accessToken: any) {

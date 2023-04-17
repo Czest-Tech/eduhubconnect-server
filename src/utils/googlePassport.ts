@@ -23,6 +23,7 @@ passport.use(new GoogleStrategy({
         isEmailVerified: profile.emails[0].verified,
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
+        accountType:1,
         profileSource: "external",
         profilePhotoSource: "external",
         profilePhoto: profile.photos[0],
@@ -34,7 +35,7 @@ passport.use(new GoogleStrategy({
       }
 
 
-      userMode.find({ googleId: profile.id }, async function (err: any, user: any) {
+      userMode.find({$or:[{ googleId: profile.id}, {email:newUser.email} ]} , async function (err: any, user: any) {
         if (user.length !== 0) {
           console.log(user)
           const createUserSession = await sessionHandler.CreateUserSession(user[0], " ")

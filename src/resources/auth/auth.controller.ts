@@ -108,7 +108,6 @@ class AuthController implements Controller {
       });
     }
 
-
   }
   private loginWithGoogle = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {

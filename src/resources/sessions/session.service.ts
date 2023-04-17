@@ -20,19 +20,67 @@ class SessionHandler {
 
     async FindSessions(query:FilterQuery<Session>):Promise<any> {
         const findSession = await sessionModel.aggregate([
-            {$match: query},
-            {$lookup: {
-                from: "users",
-                localField: "user",
-                foreignField: "_id",
-                as: "userData"
-            }},
-            {$lookup: {
-                from: "usersettings",
-                localField: "user",
-                foreignField: "userId",
-                as: "UserSettings"
-            }}
+            { $match: query },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "userData"
+                }
+            },
+            {
+                $lookup: {
+                    from: "usersettings",
+                    localField: "user",
+                    foreignField: "userId",
+                    as: "userSettings"
+                }
+            },
+            {
+                $lookup: {
+                    from: "agentaccounts",
+                    localField: "user",
+                    foreignField: "userId",
+                    as: "agentAccount"
+                }
+           },
+           {
+                $lookup: {
+                    from: "companyaccounts",
+                    localField: "user",
+                    foreignField: "createdBy",
+                    as: "companyAccount"
+                }
+           },
+           {
+                $lookup: {
+                    from: "studentaccounts",
+                    localField: "user",
+                    foreignField: "userId",
+                    as: "studentAccount"
+                }
+            },
+            {
+                $lookup: {
+                    from: "useraccounts",
+                    localField: "user",
+                    foreignField: "userId",
+                    as: "userAccounts"
+                }
+            },
+            {
+                $set : {
+                    agentAccount:{ $arrayElemAt: ["$agentAccount", 0] },
+                    companyAccount:{ $arrayElemAt: ["$companyAccount", 0] },
+                    studentAccount:{ $arrayElemAt: ["$studentAccount", 0] },
+                    userAccounts:{ $arrayElemAt: ["$userAccounts", 0] },
+                    userSettings:{ $arrayElemAt: ["$userSettings", 0] },
+                    userData:{ $arrayElemAt: ["$userData", 0] }
+                }
+            }
+            
+
         ]).exec();
         return findSession;
     }
