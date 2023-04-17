@@ -51,7 +51,8 @@ class AuthController implements Controller {
     try {
 
       const { email, password } = req.body;
-      const checkLogin = await this.userService.findUser(email)
+      const checkLogin = await this.userService.findUser(email) 
+      console.log(checkLogin)
       if (checkLogin) {
         const checkPassword = await this.hashKeys.checkPasswordHash(password, checkLogin.password);
 

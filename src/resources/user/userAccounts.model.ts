@@ -8,17 +8,33 @@ const agentSchema = new Schema(
             ref: "User",
             required: true
         },
-        notificationSettings: {
-            type:Array,
-            required:true,
+        configs: {
+            type:Object,
+            required:false,
+            default:{}
           
         },
         about: {
             type:String,
-            required:true,
+            required:false, 
+            default:''    
+        },
+        email: {
+            type:String,
+            required:false,
+            default:''
            
         },
-       
+        phone: {
+            type:String,
+            required:false,
+            default:'',        
+        },
+        verified: {
+            type:Boolean,
+            required:false,
+            default:false        
+        },     
 
     },
     {timestamps:true}
@@ -30,17 +46,20 @@ const companySchema = new Schema(
             ref: "User",
             required: true
         },
-        notificationSettings: {
-            type:Array,
-            required:true        
+        configs: {
+            type:Object,
+            required:false,
+            default:{}        
         },
         images: {
             type:Array,
-            required:true        
+            required:false,
+            default:[]        
         },
         files: {
             type:Array,
-            required:false        
+            required:false,
+            default:[]         
         },
         about: {
             type:String,
@@ -48,25 +67,31 @@ const companySchema = new Schema(
         },
         name: {
             type:String,
-            required:false         
+            required:false,
+            default:""        
         },
         country: {
             type:String,
-            required:false         
+            required:false,
+            default:""          
         },
         description: {
             type:String,
-            required:false         
+            required:false,
+            default:""         
         },
         contact: {
             type:String,
-            required:false         
+            required:false,
+            default:""          
         },
        
 
     },
     {timestamps:true}
 );
+
+
 
 const companyUsersSchema = new Schema(
     {
@@ -89,7 +114,72 @@ const companyUsersSchema = new Schema(
     },
     {timestamps:true}
 );
+const userAccountsSchema = new Schema(
+    {
+  
+        userId: {
+            type:Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+        accountType: {
+            type:Number,
+            required:true, 
+        },
+        isActive: {
+            type:Boolean,
+            required:true, 
+            default:false
+        },
+        verified: {
+            type:Boolean,
+            required:true, 
+            default:true
+        },     
 
-export const CompanyUsersSchema =  model<Agent>('Company', companyUsersSchema);
-export const CompanySchema =  model<Agent>('Company', companySchema);
-export const AgentSchema =  model<Agent>('UserSettings', agentSchema);
+    },
+    {timestamps:true}
+);
+const studentSchema = new Schema(
+    {
+        
+        userId: {
+            type:Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+        skills: {
+            type:Object,
+            required:false,
+            default:{}
+          
+        },
+        files: {
+            type:Object,
+            required:false,
+            default:{}
+          
+        },
+        resume: {
+            type:Object,
+            required:false,
+            default:{}
+          
+        },
+        education: {
+            type:Object,
+            required:false,
+            default:{}
+          
+        },
+       
+
+    },
+    {timestamps:true}
+);
+
+export const CompanyUsersSchema =  model<Agent>('CompanyUsers', companyUsersSchema);
+export const CompanySchema =  model<Agent>('CompanyAccount', companySchema);
+export const AgentSchema =  model<Agent>('AgentAccount', agentSchema);
+export const StudentSchema =  model<Agent>('StudentAccount', studentSchema);
+export const UserAccountsSchema =  model<Agent>('UserAccounts', userAccountsSchema);

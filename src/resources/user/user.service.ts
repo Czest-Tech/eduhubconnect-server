@@ -5,11 +5,16 @@ import {User, UserDocument,UserSettings,UserVerification,UserVerificationResend}
 import userVerificationModel from './userVerification.model';
 import HashKeys from '../../utils/hashKeys';
 import EmailHandler from '../../utils/emailHandler';
+import { AgentSchema,CompanySchema, StudentSchema,UserAccountsSchema } from './userAccounts.model';
 
 class UserService {
     private user = UserModel;
     private userSettingsModel = UserSettingsModel;
     private userVerification = userVerificationModel;
+    private agentModel = AgentSchema;
+    private studentModel = StudentSchema;
+    private companyModel = CompanySchema;
+    private userAccounts = UserAccountsSchema;
     private hashKeys = new HashKeys();
     private emailHandler = new EmailHandler()
 
@@ -43,14 +48,22 @@ class UserService {
                              {
                                 "name":"Find me by EMail Address", "value":false 
                              }
-                        ]
+                ]
             
             }
-            const createAcounts = (accountType:number) => {
-                if(accountType === 1 ){
-                    
-                }
+
+            if (parseInt(accountType) === 1 ){
+                await this.studentModel.create({userId:creatUser._id });
             }
+            if (parseInt(accountType) === 2) {          
+                await this.agentModel.create({userId:creatUser._id });
+            }
+            if(parseInt(accountType) === 3 ){
+                await this.companyModel.create({createdBy:creatUser._id });
+            }
+            await this.userAccounts.create({userId:creatUser._id, accountType:accountType });
+
+    
             if(creatUser._id){
                 const mailCode = this.hashKeys.generateKey(6,"IUoid1o3noi3u3IH5n4oi766UG89O56ijO8gvBHfgty");
                 this.emailHandler.setFieldText(firstName, mailCode);
@@ -92,6 +105,7 @@ class UserService {
                 if(send[0].token === token && !send[0].isExpired){
                  const updateOne =  await this.user.updateOne({_id:new mongoose.Types.ObjectId(send[0].userId)}, {isEmailVerified:true});
                  const updateTwo = await this.userVerification.updateOne({email:email},{isExpired:true});
+                //  await this.userAccounts.updateOne({userId:send[0].userId:}, {verified:true });
                  return true
                 } else {
                     return false
@@ -131,10 +145,53 @@ class UserService {
         }
     }
 
-    public async findUser(query:any){
+    public async findUser(query:any):Promise<any> {
         try{
-            const checkEmail = await this.user.findOne({email: query});
-            return checkEmail;
+            const checkEmail = await this.user.aggregate([
+               {$match:{email: query}},
+               {
+                    $lookup: {
+                        from: "agentaccounts",
+                        localField: "_id",
+                        foreignField: "userId",
+                        as: "agentAccount"
+                    }
+               },
+               {
+                    $lookup: {
+                        from: "companyaccounts",
+                        localField: "_id",
+                        foreignField: "createdBy",
+                        as: "companyAccount"
+                    }
+               },
+               {
+                    $lookup: {
+                        from: "studentaccounts",
+                        localField: "_id",
+                        foreignField: "userId",
+                        as: "studentAccount"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "useraccounts",
+                        localField: "_id",
+                        foreignField: "userId",
+                        as: "userAccounts"
+                    }
+                },
+                {
+                    $set : {
+                        agentAccount:{ $arrayElemAt: ["$agentAccount", 0] },
+                        companyAccount:{ $arrayElemAt: ["$companyAccount", 0] },
+                        studentAccount:{ $arrayElemAt: ["$studentAccount", 0] },
+                        userAccounts:{ $arrayElemAt: ["$userAccounts", 0] },
+                    }
+                }
+                
+            ]);
+            return checkEmail[0];
         } catch (error:any) {
             throw new Error(error.message);
             

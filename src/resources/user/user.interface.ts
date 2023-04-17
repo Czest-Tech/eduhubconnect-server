@@ -44,15 +44,16 @@ interface UserVerificationResend extends  Document,UserVerification {
 }
 interface StudentAccount extends UserDocument {
   userId : User["_id"];
-  skills: Array<any>;
-  files: Array<any>;
-  resume: Array<any>;
-  education: Array<any>;
+  skills: Object;
+  files: Object;
+  resume: Object;
+  education: Object;
 }
 interface Agent extends UserDocument {
   userId : User["_id"];
   about: string;
   phone:string;
+  configs:Object;
   email:string;
   verified: boolean;
 }
@@ -61,8 +62,11 @@ interface Company extends UserDocument {
   name:string;
   city:string;
   country:string;
+  configs:Object;
   description:string;
-  images:Array<string>;
+  about:string;
+  images:Array<any>;
+  files:Array<any>;
   contact:string;
 }
 interface CompanyUsers extends UserDocument {
@@ -70,5 +74,12 @@ interface CompanyUsers extends UserDocument {
   userId: User["_id"];
   userType:number;
 }
+interface UserAccounts extends Document {
+  userId: User["_id"];
+  accountType:number;
+  isActive:Boolean;
+  verified:boolean;
+}
  
-export { User, UserDocument, Agent, CompanyUsers,UserVerificationResend, Company,UpdateUser, UserSettings, StudentAccount, UserVerification }
+ 
+export { User, UserDocument, Agent, UserAccounts, CompanyUsers,UserVerificationResend, Company,UpdateUser, UserSettings, StudentAccount, UserVerification }
