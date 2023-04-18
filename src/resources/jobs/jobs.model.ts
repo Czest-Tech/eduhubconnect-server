@@ -34,6 +34,11 @@ const JobSchema = new Schema (
             ref: "User",
             required: true
         },
+        companyId: {
+            type:Schema.Types.ObjectId,
+            ref: "CompanyAccounts",
+            required: true
+        },
         isActive:{type: String, required: false}
     },
     {timestamps:true}

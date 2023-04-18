@@ -17,5 +17,7 @@ export default interface Jobs extends Document {
     attachments:Array<string>;
     links:Array<string>;
     postedBy: User["_id"];
+    companyId: User["_id"];
+
     isActive:boolean;
 }
