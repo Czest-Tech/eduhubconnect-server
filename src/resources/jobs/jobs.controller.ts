@@ -44,14 +44,16 @@ class JobsController implements Controller {
     private create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const { name} = req.body;
+           
             const file = req.files as any;
-
-            const result = file ? await uploadMultipleS3(file) : []
-            await this.unlinkFile(file.path)
-
+            if(file){
+                const result = file ? await uploadMultipleS3(file) : []
+                await this.unlinkFile(file.path)
+                req.body["attachments"] = result;
+            }
             req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
             
-            req.body["attachments"] = result;
+    
             const jobs = await this.jobsService.create(req.body)
 
             res.status(201).json(jobs)
@@ -67,12 +69,13 @@ class JobsController implements Controller {
             var result:any;
             const { imagesToDelete, jobId } = req.body;
           
-            if (imagesToDelete.length !== 0) {
-                await deleteMultipleS3(imagesToDelete as unknown as Array<any>);
-            }
+         
             if (file) {
-                result = await uploadMultipleS3(file)
-            }
+                result = await uploadMultipleS3(file) 
+                  if (imagesToDelete.length !== 0) {
+                    await deleteMultipleS3(imagesToDelete as unknown as Array<any>);
+                }
+            
 
             const data = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
             data[0].attachments.forEach((element: any) => {
@@ -84,7 +87,7 @@ class JobsController implements Controller {
             if(filterImages || result ){
                 const combinedImages = [...filterImages, ...result ];
                 req.body["attachments"] = combinedImages;
-            }
+            }}
             const jobs = await this.jobsService.update(req.body, jobId)
 
             res.status(201).json(jobs)
