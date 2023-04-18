@@ -7,12 +7,15 @@ export default interface Jobs extends Document {
     location:string;
     phone:string;
     email:string;
+    level:string;
+    amount:Number;
+    rate:String;
     nameSlug:string;
     desctrition:string;
+    currency:string;
+    period:string;
     attachments:Array<string>;
     links:Array<string>;
     postedBy: User["_id"];
-    createdAt: Date;
-    updatedAt: Date;
     isActive:boolean;
 }

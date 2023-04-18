@@ -6,21 +6,29 @@ const JobSchema = new Schema (
         name:{type: String, required: true},
         skills:{
             type:Array<string>,
-            required: false
+            required: false,
+            default: []
         },
-        location:{type: String, required: false},
-        phone:{type: String, required: false},
-        email:{type: String, required: false},
-        nameSlug:{type: String, required: false},
-        description:{type: String, required: false},
+        location:{type: String, required: true,default: ""},
+        phone:{type: String, required: false, default:null},
+        email:{type: String, required: false,default: ""},
+        nameSlug:{type: String, required: false,default: ""},
+        description:{type: String, required: false,default: ""},
+        level:{type: String, required: false,default: ""},
         attachments:{
             type:Array<string>,
-            required: false
+            required: false,
+            default: []
         },
         links:{
             type:Array<string>,
-            required: false
+            required: false,
+            default: []
         },
+        period:{type: String, required: false,default: ""},
+        amount:{type: Number, required: false,default: 0.00},
+        rate:{type: String, required: false, default: ""},
+        currency:{type: String, required: false,default: ""},
         postedBy: {
             type:Schema.Types.ObjectId,
             ref: "User",
