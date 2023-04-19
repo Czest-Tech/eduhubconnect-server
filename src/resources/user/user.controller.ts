@@ -8,7 +8,7 @@ import HashKeys from '../../utils/hashKeys';
 import multer from 'multer';
 import fs from 'fs';
 import util from 'util';
-import { uploadS3, getFileStream } from '../../utils/uploadFiltersHandler';
+import { uploadS3, getFileStream, uploadMultipleS3 } from '../../utils/uploadFiltersHandler';
 import mongoose from 'mongoose';
 import EmailHandler from '../../utils/emailHandler';
 import SMSHandler from '../../utils/smsHandler';
@@ -19,7 +19,8 @@ class UserController implements Controller {
     public path = '/user';
     private upload  =  multer({ dest: './'});
     private userRegisterEndoint = '/register';
-    private userUpdate = '/update';
+    private userUpdate = '/update';    
+    private companyUpdate = '/update/company';
     private deleteUser = '/delete/:id';
     private getAllUsersEndpoint = '/get-users';
     private getUserById = '/get-user/:id'
@@ -52,6 +53,8 @@ class UserController implements Controller {
         this.router.get(`${this.path+this.getUserById}`, this.getUserByID);
         this.router.get(`${this.path+this.getAllUsersEndpoint}`, this.getAllUsers);
         this.router.put(`${this.path+this.updateProfileInfo}`, this.updateUserInfo);
+        this.router.patch(`${this.path+this.companyUpdate}`, [ this.upload.single('image')], this.updateCompanyInfo);
+        
     }
 
     private create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -173,6 +176,23 @@ class UserController implements Controller {
             next(new HttpException(400,error.message))
         }
     }
+    private updateCompanyInfo = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const {companyId} = req.body;
+            const file = req.files as any;
+            if(file){
+                const result = file ? await uploadMultipleS3(file) : []
+                await this.unlinkFile(file.path)
+                req.body["images"] = result;
+            }
+            var updateQuery:object  = req.body
+            const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(companyId)}, updateQuery)
+            res.status(201).json({user})
+
+        } catch (error:any) {
+            next(new HttpException(400,error.message))
+        }
+    }
     private updateUserSettings = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const {userId} = req.body;
@@ -224,7 +244,7 @@ class UserController implements Controller {
                 }
             } else {
                 if(checCode){
-                    
+
                 }
             }
         } catch (error:any) {

@@ -68,6 +68,7 @@ interface Company extends UserDocument {
   images:Array<any>;
   files:Array<any>;
   contact:string;
+  address:string;
 }
 interface CompanyUsers extends UserDocument {
   companyId: Company["_id"];

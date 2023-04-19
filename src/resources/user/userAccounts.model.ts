@@ -86,6 +86,12 @@ const companySchema = new Schema(
             required:false,
             default:""          
         },
+        address: {
+            type:String,
+            required:false,
+            default:""          
+        },
+        
        
 
     },

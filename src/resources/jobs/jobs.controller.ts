@@ -35,6 +35,7 @@ class JobsController implements Controller {
     private initialiseRoutes(): void {
         this.router.post(`${this.path + this.createJobsEndPoint}`, [this.upload?.array("images")], this.create);
         this.router.patch(`${this.path + this.updateJobsEndPoint}`, [this.upload?.array("images")], this.update);
+        this.router.put(`${this.path + this.updateJobsEndPoint}`, [this.upload?.array("images")], this.update);
         this.router.get(`${this.path + this.getAllJobsEndPoint}`, this.getAllJobs);
         this.router.post(`${this.path + this.searchProduct}`, this.searchJobs);
         this.router.get(`${this.path + this.getShopJobsEndPoint}`, this.getCompanyJobs);

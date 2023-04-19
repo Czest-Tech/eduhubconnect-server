@@ -1,7 +1,7 @@
 import mongoose,{ FilterQuery, UpdateQuery } from 'mongoose';
 import UserModel from './user.model'
 import UserSettingsModel from './userSettings.model'
-import {User, UserDocument,UserSettings,UserVerification,UserVerificationResend} from './user.interface'
+import {Company, User, UserDocument,UserSettings,UserVerification,UserVerificationResend} from './user.interface'
 import userVerificationModel from './userVerification.model';
 import HashKeys from '../../utils/hashKeys';
 import EmailHandler from '../../utils/emailHandler';
@@ -121,6 +121,15 @@ class UserService {
     public async update(update:FilterQuery<UserDocument>,query:UpdateQuery<UserDocument>) {
         try {
             const updateUser =  await this.user.findOneAndUpdate(update, query,{returnDocument:"after"});
+            return updateUser;
+        } catch (error:any) {
+            throw new Error(error.message);
+            
+        }
+    }  
+    public async updateCompany(update:FilterQuery<Company>,query:UpdateQuery<Company>) {
+        try {
+            const updateUser =  await this.companyModel.findOneAndUpdate(update, query,{returnDocument:"after"});
             return updateUser;
         } catch (error:any) {
             throw new Error(error.message);
