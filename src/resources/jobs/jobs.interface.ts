@@ -18,6 +18,6 @@ export default interface Jobs extends Document {
     links:Array<string>;
     postedBy: User["_id"];
     companyId: User["_id"];
-
+    duration:string;
     isActive:boolean;
 }

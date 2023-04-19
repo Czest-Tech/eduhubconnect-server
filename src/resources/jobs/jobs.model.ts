@@ -14,6 +14,7 @@ const JobSchema = new Schema (
         email:{type: String, required: false,default: ""},
         nameSlug:{type: String, required: false,default: ""},
         description:{type: String, required: false,default: ""},
+        duration:{type: String, required: false,default: ""},
         level:{type: String, required: false,default: ""},
         attachments:{
             type:Array<string>,
