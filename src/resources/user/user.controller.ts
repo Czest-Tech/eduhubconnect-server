@@ -54,7 +54,7 @@ class UserController implements Controller {
         this.router.get(`${this.path+this.getUserById}`, this.getUserByID);
         this.router.get(`${this.path+this.getAllUsersEndpoint}`, this.getAllUsers);
         this.router.put(`${this.path+this.updateProfileInfo}`, this.updateUserInfo);
-        this.router.patch(`${this.path+this.companyUpdate}`, [ this.upload?.single('images')], this.updateCompanyInfo);
+        this.router.put(`${this.path+this.companyUpdate}`, [ this.upload?.single('images')], this.updateCompanyInfo);
         this.router.get(`${this.path+this.companySetttings}`, this.getCompanyInfo);
    
     }
