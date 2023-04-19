@@ -53,7 +53,7 @@ class UserController implements Controller {
         this.router.get(`${this.path+this.getUserById}`, this.getUserByID);
         this.router.get(`${this.path+this.getAllUsersEndpoint}`, this.getAllUsers);
         this.router.put(`${this.path+this.updateProfileInfo}`, this.updateUserInfo);
-        this.router.patch(`${this.path+this.companyUpdate}`, [ this.upload.single('image')], this.updateCompanyInfo);
+        this.router.patch(`${this.path+this.companyUpdate}`, [ this.upload?.single('images')], this.updateCompanyInfo);
         
     }
 
@@ -137,7 +137,7 @@ class UserController implements Controller {
     }
     private uploadProfilePicture = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-           
+            console.log('Uploading profile picture', req)
             const file = req.file as any;
             const {userId,profileSource } = req.body;
             const result = await uploadS3(file);
@@ -179,14 +179,14 @@ class UserController implements Controller {
     private updateCompanyInfo = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const {companyId} = req.body;
-            const file = req.files as any;
+            const file = req.file as any;
+            console.log(req, "here")
             if(file){
-                const result = file ? await uploadMultipleS3(file) : []
+                const result = file ? await uploadS3(file) : []
                 await this.unlinkFile(file.path)
                 req.body["images"] = result;
             }
-            var updateQuery:object  = req.body
-            const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(companyId)}, updateQuery)
+            const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(companyId)}, req.body)
             res.status(201).json({user})
 
         } catch (error:any) {
