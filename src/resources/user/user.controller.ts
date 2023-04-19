@@ -188,8 +188,8 @@ class UserController implements Controller {
                 await this.unlinkFile(file.path)
                 req.body["images"] = result;
             }
-            const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(companyId)}, req.body)
-            res.status(201).json({user})
+            const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(companyId)}, req.body) as any
+            res.status(201).json(user[0])
 
         } catch (error:any) {
             next(new HttpException(400,error.message))
