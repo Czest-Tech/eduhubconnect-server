@@ -127,7 +127,7 @@ class JobsController implements Controller {
             const { jobId } = req.params;
             const job = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
 
-            res.status(201).json(job)
+            res.status(201).json(job[0])
         } catch (error: any) {
             next(new HttpException(400, error.message))
         }

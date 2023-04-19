@@ -133,11 +133,11 @@ export default class JobsService {
     }
     public async getSingleJob(query: FilterQuery<Jobs>): Promise<any> {
         try {
-            const products: any = await this.jobs.aggregate([
+            const job: any = await this.jobs.aggregate([
                 { $match: query }          
             ])
             
-            return products;
+            return job;
         } catch (error: any) {
             throw new Error(error.message);
         }
