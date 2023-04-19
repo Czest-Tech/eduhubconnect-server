@@ -225,6 +225,15 @@ class UserService {
             
         }
     }
+    public async getCompanyInfo (id:object){
+        try {
+           return await this.companyModel.find(id);
+ 
+        } catch (error:any) {
+            throw new Error(error.message);
+            
+        }
+    }
     public async createOrupdateUserVerificationSettings(update:FilterQuery<UserSettings>,query:UpdateQuery<UserSettings>) {
         try {
             const updateUser =  await this.userVerification.updateOne(query,update,{returnDocument:"after",upsert:true});

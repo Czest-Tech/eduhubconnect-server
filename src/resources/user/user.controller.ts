@@ -21,6 +21,7 @@ class UserController implements Controller {
     private userRegisterEndoint = '/register';
     private userUpdate = '/update';    
     private companyUpdate = '/update/company';
+    private companySetttings = '/company/settings/:id';
     private deleteUser = '/delete/:id';
     private getAllUsersEndpoint = '/get-users';
     private getUserById = '/get-user/:id'
@@ -54,7 +55,8 @@ class UserController implements Controller {
         this.router.get(`${this.path+this.getAllUsersEndpoint}`, this.getAllUsers);
         this.router.put(`${this.path+this.updateProfileInfo}`, this.updateUserInfo);
         this.router.patch(`${this.path+this.companyUpdate}`, [ this.upload?.single('images')], this.updateCompanyInfo);
-        
+        this.router.get(`${this.path+this.companySetttings}`, this.getCompanyInfo);
+   
     }
 
     private create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -188,6 +190,17 @@ class UserController implements Controller {
             }
             const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(companyId)}, req.body)
             res.status(201).json({user})
+
+        } catch (error:any) {
+            next(new HttpException(400,error.message))
+        }
+    }
+
+    private getCompanyInfo = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const { id } = req.params;
+            const settings = await this.userService.getCompanyInfo({_id: new mongoose.Types.ObjectId(id)});
+            res.status(201).json(settings[0])
 
         } catch (error:any) {
             next(new HttpException(400,error.message))
