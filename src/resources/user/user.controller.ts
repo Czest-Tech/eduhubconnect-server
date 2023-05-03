@@ -20,7 +20,7 @@ class UserController implements Controller {
     private upload  =  multer({ dest: './'});
     private userRegisterEndoint = '/register';
     private userUpdate = '/update';    
-    private companyUpdate = '/update/company';
+    private companyUpdate = '/update/company/:id';
     private companySetttings = '/company/settings/:id';
     private deleteUser = '/delete/:id';
     private getAllUsersEndpoint = '/get-users';
@@ -180,16 +180,15 @@ class UserController implements Controller {
     }
     private updateCompanyInfo = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const {companyId} = req.body;
+            const {id} = req.params;
             const file = req.file as any;
-            console.log(req, "here")
             if(file){
                 const result = file ? await uploadS3(file) : []
                 await this.unlinkFile(file.path)
                 req.body["images"] = result;
             }
-            const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(companyId)}, req.body) as any
-            res.status(201).json(user[0])
+            const user =  await this.userService.updateCompany({_id:new mongoose.Types.ObjectId(id)}, req.body) as any
+            res.status(201).json(user)
 
         } catch (error:any) {
             next(new HttpException(400,error.message))

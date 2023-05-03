@@ -76,12 +76,22 @@ const companySchema = new Schema(
             required:false,
             default:""          
         },
+        city: {
+            type:String,
+            required:false,
+            default:""          
+        },
         description: {
             type:String,
             required:false,
             default:""         
         },
         contact: {
+            type:String,
+            required:false,
+            default:""          
+        },
+        email: {
             type:String,
             required:false,
             default:""          
