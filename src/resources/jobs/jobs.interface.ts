@@ -1,7 +1,7 @@
-import { User } from '../user/user.interface';
+import { User, Company } from '../user/user.interface';
 import { Document } from 'mongoose';
 
-export default interface Jobs extends Document {
+interface Jobs extends Document {
     name:String;
     skills:Array<string>;
     location:string;
@@ -21,3 +21,32 @@ export default interface Jobs extends Document {
     duration:string;
     isActive:boolean;
 }
+interface Applications extends Document {
+    jobId:Jobs["_id"];
+    applicationId?:string;
+    images?: Array<any>;
+    firstName:string;
+    lastName:string;
+    files?: Array<any>;
+    about?: string;
+    address:string;
+    city:string;
+    country:string;
+    email:string;
+    description: string;
+    contact?: string;
+    skills?: Array<any>;
+    location?: string;
+    phone: string;
+    level?: string;
+    amount?: 0,
+    rate?: string;
+    duration?: string;
+    currency?: string;
+    period?: string;
+    resume?: [],
+    links?: [],
+    companyId: Company["_id"];
+}
+
+export { Jobs, Applications  }

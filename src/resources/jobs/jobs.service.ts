@@ -1,9 +1,10 @@
-import jobsModel from "./jobs.model";
-import Jobs from "./jobs.interface";
+import { ApplicationSchema, JobSchema } from "./jobs.model";
+import { Jobs,Applications } from "./jobs.interface";
 import mongoose, {FilterQuery,UpdateQuery} from "mongoose";
 
 export default class JobsService {
-    private jobs = jobsModel;
+    private jobs = JobSchema;
+    private applications = ApplicationSchema;
     
     public async create (body:any): Promise<Jobs> {
        try {   
@@ -12,6 +13,24 @@ export default class JobsService {
           throw new Error(error.message)
        }
     }
+    public async apply (body:any): Promise<Applications> {
+        try {   
+            console.log(body)
+           return await this.applications.create({...body});
+        } catch (error:any) {
+           throw new Error(error.message)
+        }
+    }
+    public async findApplication (query:any): Promise<any> {
+        try {   
+            const data = await this.applications.find(query);
+           return data 
+        } catch (error:any) {
+           throw new Error(error.message)
+        }
+    }
+    
+ 
 
     
     public async update(body: UpdateQuery<any>, jobId: any): Promise<any> {
@@ -54,83 +73,108 @@ export default class JobsService {
         }
     }
 
-    public async getJobs(req?:any): Promise<any> {
+    public async getJobs(req?: any): Promise<any> {
         try {
-
-            let uiValues:any = {
-                filtering: {},
-                sorting: {},
-            } as any;
-
-            const queryObj = { ...req.query } as any;
-            const excludeFields = ["page", "sort", "limit", "fields"];
-            excludeFields.forEach((el) => {
-                delete queryObj[el]
-            });
-            for(let el in queryObj ) {
-                if(typeof queryObj[el] === "object") {
-                    if( Object.keys(queryObj[el])[0] === "regex"){
-                        if(queryObj[el][Object.keys(queryObj[el])[0]] === ""){
-                            delete queryObj[el];
-                        } else {
-                            // queryObj[el]["regex"] = `/${queryObj[el][Object.keys(queryObj[el])[0]]}/`
-                            queryObj[el]["options"] = 'i';
-                        }
-                    }
+          let uiValues: any = {
+            filtering: {},
+            sorting: {},
+          } as any;
+      
+          const queryObj = { ...req.query } as any;
+          const excludeFields = ["page", "sort", "limit", "fields"];
+          excludeFields.forEach((el) => {
+            delete queryObj[el];
+          });
+          for (let el in queryObj) {
+            if (typeof queryObj[el] === "object") {
+              if (Object.keys(queryObj[el])[0] === "regex") {
+                if (queryObj[el][Object.keys(queryObj[el])[0]] === "") {
+                  delete queryObj[el];
+                } else {
+                  queryObj[el]["options"] = "i";
                 }
-
+              }
             }
-            let queryStr = JSON.stringify(queryObj);
-            queryStr = queryStr.replace(/\b(gte|gt|lte|lt|in|regex|options|match)\b/g, (match) =>{
-                
-               return `$${match}`
-            });
-            
-            let query = this.jobs.find(JSON.parse(queryStr));
-        
-            // Sorting
-        
-            if (req.query.sort) {
-              const sortBy = req.query.sort.split(",").join(" ");
-              query = query.sort(sortBy);
-            } else {
-              query = query.sort("-createdAt");
+          }
+          let queryStr = JSON.stringify(queryObj);
+          queryStr = queryStr.replace(
+            /\b(gte|gt|lte|lt|in|regex|options|match)\b/g,
+            (match) => {
+              return `$${match}`;
             }
-        
-            // limiting the fields
-        
-            if (req.query.fields) {
-              const fields = req.query.fields.split(",").join(" ");
-              query = query.select(fields);
-            } else {
-              query = query.select("-__v");
+          );
+      
+          let pipeline = [];
+      
+          // Add $match stage to pipeline
+          pipeline.push({ $match: JSON.parse(queryStr) });
+      
+          // Add $lookup stage to pipeline
+          pipeline.push({
+            $lookup: {
+              from: "applications",
+              localField: "_id",
+              foreignField: "jobId",
+              as: "applicantData",
+            },
+          });
+      
+          // Add $project stage to pipeline
+          pipeline.push({
+            $set: {
+              applicantCount: { $size: "$applicantData"},
+              applicationId:{
+                $ifNull: [
+                  { $map: { input: "$applicantData", as: "data", in: "$$data.applicationId" } },
+                  []
+                ]
+              }        
             }
-
-            const filterKeys = Object.keys(queryObj);
-            const filterValues = Object.values(queryObj);
-
-            filterKeys.forEach(
-                (val, idx) => (uiValues.filtering[val] = filterValues[idx])
-            );
-        
-            // pagination
-            let results;
-
-            const page = req.query.page;
-            const limit = req.query.limit;
+          });
+      
+          // Add $sort stage to pipeline
+          if (req.query.sort) {
+            const sortBy = req.query.sort.split(",").join(" ");
+            pipeline.push({ $sort: sortBy });
+          } else {
+            pipeline.push({ $sort: { createdAt: -1 } });
+          }
+      
+          // Add $project stage to pipeline to limit fields
+          if (req.query.fields) {
+            const fields = req.query.fields.split(",").join(" ");
+            pipeline.push({ $project: fields });
+          } else {
+            pipeline.push({ $project: { __v: 0 } });
+          }
+      
+          // Add $skip and $limit stages to pipeline
+          if (req.query.page) {
+            const page = parseInt(req.query.page);
+            const limit = parseInt(req.query.limit);
             const skip = (page - 1) * limit;
-            query = query.skip(skip).limit(limit);
-            if (req.query.page) {
-               results = await this.jobs.countDocuments(JSON.parse(queryStr));
-              if (page >= results) throw new Error("This Page does not exists");
-            }
-             const jobs =  await query;
-             return {jobs,results,filterKeys}
-            
+            pipeline.push({ $skip: skip }, { $limit: limit });
+          }
+      
+          const jobs = await this.jobs.aggregate(pipeline);
+      
+          const filterKeys = Object.keys(queryObj);
+          const filterValues = Object.values(queryObj);
+      
+          filterKeys.forEach(
+            (val, idx) => (uiValues.filtering[val] = filterValues[idx])
+          );
+      
+          // Get the total count of documents that match the query
+          const results = await this.jobs.countDocuments(JSON.parse(queryStr));
+      
+          return { jobs, results, filterKeys };
         } catch (error: any) {
-            throw new Error(error.message);
+          throw new Error(error.message);
         }
-    }
+      }
+      
+      
     public async getSingleJob(query: FilterQuery<Jobs>): Promise<any> {
         try {
             const job: any = await this.jobs.aggregate([

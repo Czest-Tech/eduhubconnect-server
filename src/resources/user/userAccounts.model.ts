@@ -189,6 +189,62 @@ const studentSchema = new Schema(
             default:{}
           
         },
+        configs: {
+            type:Object,
+            required:false,
+            default:{}        
+        },
+        images: {
+            type:Array,
+            required:false,
+            default:[]        
+        },
+      
+        firstName: {
+            type:String,
+            required:false,
+            default:""        
+        },
+        lastName: {
+            type:String,
+            required:false,
+            default:""        
+        },
+        country: {
+            type:String,
+            required:false,
+            default:""          
+        },
+        city: {
+            type:String,
+            required:false,
+            default:""          
+        },
+        about: {
+            type:String,
+            required:false,
+            default:""          
+        },
+        description: {
+            type:String,
+            required:false,
+            default:""         
+        },
+        contact: {
+            type:String,
+            required:false,
+            default:""          
+        },
+        email: {
+            type:String,
+            required:false,
+            default:""          
+        },
+        address: {
+            type:String,
+            required:false,
+            default:""          
+        },
        
 
     },

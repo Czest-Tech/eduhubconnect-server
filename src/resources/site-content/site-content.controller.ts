@@ -66,14 +66,13 @@ class SiteContentController implements Controller {
     }
     private getBlogs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const {limit, skip } = req.query;
             const {id} = req.params;
             let blogs : any = [];
             if(id){
                  blogs = await this.mainSite.getSingleBlog({_id:new mongoose.Types.ObjectId(id as any) })
                  return res.status(201).json(blogs[0])
                 } else {
-                 blogs = await this.mainSite.getBlogs(limit, skip)
+                 blogs = await this.mainSite.getBlogs(req)
             }
          
             res.status(201).json({ blogs })

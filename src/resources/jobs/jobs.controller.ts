@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction} from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import Controller from '../../utils/interfaces/controller.interface';
 import validationMiddleware from '../../middleware/validation.middleware';
 import JobsService from './jobs.service';
@@ -11,11 +11,12 @@ import HashKeys from '../../utils/hashKeys';
 import HttpException from '../../utils/exceptions/http.exception';
 
 class JobsController implements Controller {
-    public router =  Router();
+    public router = Router();
     public path: string = '/jobs';
     private unlinkFile = util.promisify(fs.unlink);
     private upload = multer({ dest: "./" });
     private createJobsEndPoint = '/create';
+    private applyJob = "/apply";
     private updateJobsEndPoint = '/update';
     private deleteJobsEndPoint = '/delete/:jobId';
     private getAllJobsEndPoint = '/get-all';
@@ -26,10 +27,11 @@ class JobsController implements Controller {
     private getShopJobsEndPoint = '/get-company-jobs'
     private getPromotedJobsEndPoint = '/get-promoted';
     private getRelateJobsEndPoint = '/get-related';
-    
+    private userApplication = 'company-job-applicants/:id';
+
     jobsService = new JobsService();
-    constructor(){
-     this.initialiseRoutes();
+    constructor() {
+        this.initialiseRoutes();
     }
 
     private initialiseRoutes(): void {
@@ -41,20 +43,55 @@ class JobsController implements Controller {
         this.router.get(`${this.path + this.getShopJobsEndPoint}`, this.getCompanyJobs);
         this.router.get(`${this.path + this.getOneJobsEndPoint}`, this.getJob);
         this.router.delete(`${this.path + this.deleteJobsEndPoint}`, this.deleteJob);
+        this.router.post(`${this.path + this.applyJob}`, [this.upload?.array("uploadResume")], this.apply);
+        this.router.get(`${this.path + this.userApplication}`, this.getApplication);
+
+
+    }
+    private apply = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const { jobId, applicationId} = req.body;
+            console.log(jobId, applicationId);
+            const file = req.file as any;
+            if (file) {
+                const result = file ? await uploadS3(file) : []
+                await this.unlinkFile(file.path)
+                req.body["resume"] = result;
+            }
+
+            const isUserApplied = await this.jobsService.findApplication({jobId: new mongoose.Types.ObjectId(jobId) , applicationId: new mongoose.Types.ObjectId(applicationId)});
+              console.log(isUserApplied, "check if exists")
+            if (isUserApplied.length !== 0) return res.status(201).json({state:"already_aplied"});
+
+            const jobs = await this.jobsService.apply(req.body)
+
+          return  res.status(201).json({state:"application_sent"});
+        } catch (error: any) {
+            next(new HttpException(error.status, error.message))
+        }
+    }
+    private  getApplication = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const {applicationId,jobId} = req.query as any;
+            const isUserApplied = await this.jobsService.findApplication({jobId: new mongoose.Types.ObjectId(jobId) , applicationId: new mongoose.Types.ObjectId(applicationId)});
+            res.status(201).json(isUserApplied)
+        } catch (error:any) {
+            next(new HttpException(error.status, error.message))
+        }
     }
     private create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const { name} = req.body;
-           
+            const { name } = req.body;
+
             const file = req.files as any;
-            if(file){
+            if (file) {
                 const result = file ? await uploadMultipleS3(file) : []
                 await this.unlinkFile(file.path)
                 req.body["attachments"] = result;
             }
-            req.body["nameSlug"] = new HashKeys().slugify(name +"-ref-"+ new Date().getTime().toString())
-            
-    
+            req.body["nameSlug"] = new HashKeys().slugify(name + "-ref-" + new Date().getTime().toString())
+
+
             const jobs = await this.jobsService.create(req.body)
 
             res.status(201).json(jobs)
@@ -64,31 +101,32 @@ class JobsController implements Controller {
     }
     private update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            
+
             const file = req.files as any[];
             const filterImages: any[] = [];
-            var result:any;
+            var result: any;
             const { imagesToDelete, jobId } = req.body;
-          
-         
+
+
             if (file) {
-                result = await uploadMultipleS3(file) 
-                  if (imagesToDelete.length !== 0) {
+                result = await uploadMultipleS3(file)
+                if (imagesToDelete.length !== 0) {
                     await deleteMultipleS3(imagesToDelete as unknown as Array<any>);
                 }
-            
 
-            const data = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
-            data[0].attachments.forEach((element: any) => {
-                if (!imagesToDelete.includes(element.key)) {
-                    filterImages.push(element)
+
+                const data = await this.jobsService.getSingleJob({ _id: new mongoose.Types.ObjectId(jobId) })
+                data[0].attachments.forEach((element: any) => {
+                    if (!imagesToDelete.includes(element.key)) {
+                        filterImages.push(element)
+                    }
+                });
+                this.UnlinkMultipleDownload(file)
+                if (filterImages || result) {
+                    const combinedImages = [...filterImages, ...result];
+                    req.body["attachments"] = combinedImages;
                 }
-            });
-            this.UnlinkMultipleDownload(file)
-            if(filterImages || result ){
-                const combinedImages = [...filterImages, ...result ];
-                req.body["attachments"] = combinedImages;
-            }}
+            }
             const jobs = await this.jobsService.update(req.body, jobId)
 
             res.status(201).json(jobs)
@@ -96,11 +134,11 @@ class JobsController implements Controller {
             if (error instanceof multer.MulterError) {
                 // A Multer error occurred when uploading.
                 console.log(error)
-              } else if (error) {
+            } else if (error) {
                 // An unknown error occurred when uploading.
                 console.log(error)
 
-              }
+            }
             next(new HttpException(error.status, error.message))
         }
     }
@@ -115,7 +153,7 @@ class JobsController implements Controller {
     }
     private getAllJobs = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
-            const jobs = await this.jobsService.getJobs(req)
+            const jobs = await this.jobsService.getJobs(req);
 
             res.status(201).json(jobs)
         } catch (error: any) {

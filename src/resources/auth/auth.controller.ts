@@ -58,9 +58,7 @@ class AuthController implements Controller {
 
         if (checkPassword) {
           if(checkLogin.isEmailVerified as any){
-            checkLogin
             const createUserSession = await this.sessionHandler.CreateUserSession(checkLogin, req.get("user-agent") || "")
-
 
              return res.send({checkLogin,createUserSession})
           } else {

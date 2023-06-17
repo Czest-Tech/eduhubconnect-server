@@ -77,9 +77,39 @@ export default class SiteContentService {
         }
     }
 
-    public async getBlogs(limit:any = 20,skip:any = 0): Promise<any> {
+    public async getBlogs(req?:any): Promise<any> {
         try {
-            return  await this.blogs.aggregate([
+            let uiValues: any = {
+                filtering: {},
+                sorting: {},
+              } as any;
+          
+              const queryObj = { ...req.query } as any;
+              const excludeFields = ["page", "sort", "limit", "fields"];
+              excludeFields.forEach((el) => {
+                delete queryObj[el];
+              });
+
+            for (let el in queryObj) {
+                if (typeof queryObj[el] === "object") {
+                    if (Object.keys(queryObj[el])[0] === "regex") {
+                        if (queryObj[el][Object.keys(queryObj[el])[0]] === "") {
+                        delete queryObj[el];
+                        } else {
+                        queryObj[el]["options"] = "i";
+                        }
+                    }
+                }
+            }
+            let queryStr = JSON.stringify(queryObj);
+            queryStr = queryStr.replace(
+                /\b(gte|gt|lte|lt|in|regex|options|match)\b/g,
+                (match) => {
+                return `$${match}`;
+                }
+            );
+            let pipeline = [];
+             pipeline.push(  
                 {
                     $lookup: {
                         from: "blogcategories",
@@ -106,8 +136,31 @@ export default class SiteContentService {
                             ]
                         }    
                     }
-                }          
-            ]).skip(skip).limit(limit).sort({"createdAt":-1});
+                }    
+            )
+
+            if (req.query.sort) {
+                const sortBy = req.query.sort.split(",").join(" ");
+                pipeline.push({ $sort: sortBy });
+              } else {
+                pipeline.push({ $sort: { createdAt: -1 } });
+            }
+            if (req.query.fields) {
+                const fields = req.query.fields.split(",").join(" ");
+                pipeline.push({ $project: fields });
+            } 
+            else {
+                pipeline.push({ $project: { __v: 0 } });
+            }
+
+            if (req.query.page) {
+                const page = parseInt(req.query.page);
+                const limit = parseInt(req.query.limit);
+                const skip = (page - 1) * limit;
+                pipeline.push({ $skip: skip }, { $limit: limit });
+            }
+
+            return  await this.blogs.aggregate(pipeline);
         } catch (error: any) {
             throw new Error(error.message);
 

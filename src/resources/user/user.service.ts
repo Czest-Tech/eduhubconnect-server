@@ -136,6 +136,15 @@ class UserService {
             
         }
     }
+    public async updateStudent(update:FilterQuery<Company>,query:UpdateQuery<Company>) {
+        try {
+            const updateUser =  await this.studentModel.findOneAndUpdate(update, query,{returnDocument:"after"});
+            return updateUser;
+        } catch (error:any) {
+            throw new Error(error.message);
+            
+        }
+    }
     public async delete(id:any) {
         try {
             const creatUser =  await this.user.deleteOne(id);
@@ -228,6 +237,15 @@ class UserService {
     public async getCompanyInfo (id:object){
         try {
            return await this.companyModel.find(id);
+ 
+        } catch (error:any) {
+            throw new Error(error.message);
+            
+        }
+    }
+    public async getStudentInfo (id:object){
+        try {
+           return await this.studentModel.find(id);
  
         } catch (error:any) {
             throw new Error(error.message);

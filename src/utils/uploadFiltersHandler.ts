@@ -12,6 +12,7 @@ const  s3 = new AWS({ region,accessKeyId, secretAccessKey});
 
  export  const uploadS3 = async(file:any): Promise<object | any> => {
   try {
+    console.log(file)
     const fileStream = await fs.createReadStream(file.path)   
     const uploadParams = {
       Bucket: bucketName,
@@ -29,7 +30,6 @@ const  s3 = new AWS({ region,accessKeyId, secretAccessKey});
 }
 
 export  const uploadMultipleS3 = async(files:Array<any>): Promise<Array<object> | any> => {
-  console.log(files)
   var len = files.length;
   var fileStruct:any[] = [];
   var filefilesbject:any[] = [];
